@@ -1,0 +1,34 @@
+<!--
+  Insert this block into the "SignalTech Hub" Work Order page, directly
+  ABOVE the existing final CTA section that contains:
+    {%- entityform name: "Work Order Submission" -%}{%- endentityform -%}
+
+  It adds the new "Paste Work Orders" step. The native entity form below
+  it is left in place as a manual fallback - hide/remove it once the
+  paste-and-match flow is validated, if you no longer need single-record
+  manual entry.
+
+  Before this works, upload work-order-paste-match.css and
+  work-order-paste-match.js (from this same folder) as Web Files in
+  Power Pages Studio: Content > Web Files > Upload file. Keep the
+  filenames as-is, or update the two `webfile_url` references below to
+  match whatever you name them.
+-->
+<link rel="stylesheet" href="{{ 'work-order-paste-match.css' | webfile_url }}">
+
+<div class="row sectionBlockLayout sec-6" data-component-theme="portalThemeColor8" style="display: flex; flex-wrap: wrap; min-height: auto;">
+  <div class="container" style="display: flex; flex-wrap: wrap; width: 100%;">
+    <div class="col-md-12 columnBlockLayout" style="flex-grow: 1; display: flex; flex-direction: column; padding: 56px 40px;">
+      <span style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.75); font-weight: 600; display: block; margin-bottom: 10px;">From JDE</span>
+      <h2 style="font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 800; color: #fff; margin-bottom: 12px;">Paste Work Orders</h2>
+      <p style="color: rgba(255,255,255,0.85); max-width: 640px; line-height: 1.7; margin-bottom: 28px;">
+        Copy the block of work orders straight out of JDE (with or without the header row) and paste it below.
+        We'll match each Serial Number against the asset master data, including KP, so you can catch a typo or a
+        missing asset record before it's submitted.
+      </p>
+      <div id="jde-paste-match-root"></div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ 'work-order-paste-match.js' | webfile_url }}"></script>
