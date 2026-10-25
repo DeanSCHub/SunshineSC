@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="Mantis" constructor="MantisMap" version="1.0.0" display-name-key="Mantis map" description-key="Interactive Mantis signalling map. Tap an asset for its drawings." control-type="standard">
+    <external-service-usage enabled="false"></external-service-usage>
+    <property name="Asset" display-name-key="Asset" description-key="Asset ID to show, e.g. WVS933. The map flies to it and opens its panel." of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="LinkHandling" display-name-key="Link handling" description-key="Browser: drawings open in a new tab. App: drawings are passed out through LinkToOpen so the app can Launch() them." of-type="Enum" usage="input" default-value="Browser" required="true">
+      <value name="Browser" display-name-key="Browser">Browser</value>
+      <value name="App" display-name-key="App">App</value>
+    </property>
+    <property name="SelectedAsset" display-name-key="Selected asset" description-key="The asset the user has open on the map, blank when none." of-type="SingleLine.Text" usage="output" />
+    <property name="SelectedKind" display-name-key="Selected kind" description-key="What the selected asset is, e.g. Signal, Points, Location case." of-type="SingleLine.Text" usage="output" />
+    <property name="LinkToOpen" display-name-key="Link to open" description-key="With Link handling = App: the drawing or link the user tapped. Use OnChange: If(!IsBlank(Self.LinkToOpen), Launch(Self.LinkToOpen))." of-type="SingleLine.Text" usage="output" />
+    <resources>
+      <code path="index.ts" order="1" />
+    </resources>
+  </control>
+</manifest>

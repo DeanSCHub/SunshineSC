@@ -15,6 +15,7 @@ and Claude can carry on from here.
 - build/live_mock.py        sample live data for the live badges mockup
 - build/taps.py, perf3.py   the tap and smoothness checks
 - build/report.py           makes the link check workbook
+- pcf/                      the map as a Power Apps code component (see pcf/README.md)
 - build/filecheck.py        checks every link against a SharePoint file list export; makes the file check workbook
 
 ## Rebuild the map from the data
@@ -28,6 +29,12 @@ Live badges mockup (sample faults and work orders on real asset IDs):
 
     python3 build/live_mock.py out/styled.json out/live.json
     MANTIS_CHUNK=1 python3 build/page.py out/live.json build/template_v3.html out/Mantis_live_mockup.html
+
+## Power Apps (canvas app code component)
+`pcf/` wraps the built map as a code component in an importable solution. Setup steps for the
+environment and app are in `pcf/README.md`.
+
+    cd pcf && npm install && ./build.sh 1.0.0      # -> out/MantisMap_1_0_0.zip
 
 ## SharePoint file check
 Export Shared Documents > Sunshine to Excel (all items, no folders), then:
@@ -56,5 +63,7 @@ JDE work order list just needs to produce the same list, matched by asset ID as 
 - SharePoint file check done (export of 25 Oct 2026): 9 broken links fixed to their ~Assets copies.
   Still broken: axle counter overviews for DPK935ZB, DPK927ZB, DPK932ZB, DPK820ZB (no file in SharePoint)
   and two links with no file name. 103 drawings in ~Assets aren't linked from the map; see the workbook.
+- Power Apps: code component + solution built (MantisMap 1.0.0), tested in a local harness;
+  not yet imported into an environment.
 - Parked: live badges (needs fault app and JDE work order exports).
 - Left for now (no drawings): MW325 CHCPB, A26T, A364UPS, 26kVA GEN.

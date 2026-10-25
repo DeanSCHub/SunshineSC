@@ -815,7 +815,8 @@ function select(l, fromSearch){
   }
 }
 function openSheet(){ const el = $("#sheet"); el.classList.add("open"); el.setAttribute("aria-hidden", "false"); document.body.classList.add("sheet-open"); }
-function closeSheet(){ const el = $("#sheet"); el.classList.remove("open"); el.setAttribute("aria-hidden", "true"); document.body.classList.remove("sheet-open"); $("#hl").innerHTML = ""; selected = null; }
+function closeSheet(){ const el = $("#sheet"); el.classList.remove("open"); el.setAttribute("aria-hidden", "true"); document.body.classList.remove("sheet-open"); $("#hl").innerHTML = ""; const was = selected; selected = null;
+  try { if (was && window.parent !== window) window.parent.postMessage({ type: "mantis:closed" }, "*"); } catch(e){} }
 $("#sClose").onclick = closeSheet;
 
 /* ================= search ================= */
@@ -1001,6 +1002,13 @@ window.Mantis = {
   onSelect: null
 };
 window.addEventListener("message", e => { const d = e.data || {}; if (d.type === "mantis:select") window.Mantis.select(d.id); });
+// inside a Power Apps code component the host can ask for links to be handed back (some players block pop-ups)
+if (window.MANTIS_EMBED && window.MANTIS_EMBED.links === "app") document.addEventListener("click", e => {
+  const a = e.target.closest && e.target.closest("a[href]");
+  if (!a || a.getAttribute("href") === "#") return;
+  e.preventDefault();
+  window.parent.postMessage({ type: "mantis:open", url: a.href }, "*");
+});
 (function openFromLink(){
   let id = "";
   try { id = new URLSearchParams(location.search).get("asset") || decodeURIComponent(location.hash.slice(1)); } catch(e){}
