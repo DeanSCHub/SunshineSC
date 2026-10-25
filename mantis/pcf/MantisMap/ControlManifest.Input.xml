@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="Mantis" constructor="MantisMap" version="1.0.1" display-name-key="Mantis map" description-key="Interactive Mantis signalling map. Tap an asset for its drawings." control-type="standard">
+  <control namespace="Mantis" constructor="MantisMap" version="1.1.0" display-name-key="Mantis map" description-key="Interactive Mantis signalling map. Tap an asset for its drawings; editors can add, relink, hide and draw." control-type="standard">
     <external-service-usage enabled="false"></external-service-usage>
     <property name="Asset" display-name-key="Asset" description-key="Asset ID to show, e.g. WVS933. The map flies to it and opens its panel." of-type="SingleLine.Text" usage="input" required="false" />
     <property name="LinkHandling" display-name-key="Link handling" description-key="Browser: drawings open in a new tab. App: drawings are passed out through LinkToOpen so the app can Launch() them." of-type="Enum" usage="input" default-value="Browser" required="true">
       <value name="Browser" display-name-key="Browser">Browser</value>
       <value name="App" display-name-key="App">App</value>
     </property>
+    <property name="Edits" display-name-key="Edits" description-key="The map edits as JSON, e.g. JSON(ShowColumns('Mantis map edits', Name, Kind, Asset, Data), JSONFormat.Compact)." of-type="Multiple" usage="input" required="false" />
+    <property name="EditMode" display-name-key="Edit mode" description-key="true shows the editing tools (add assets, links, hide, draw). Give it only to editors." of-type="TwoOptions" usage="input" required="false" />
     <property name="SelectedAsset" display-name-key="Selected asset" description-key="The asset the user has open on the map, blank when none." of-type="SingleLine.Text" usage="output" />
     <property name="SelectedKind" display-name-key="Selected kind" description-key="What the selected asset is, e.g. Signal, Points, Location case." of-type="SingleLine.Text" usage="output" />
     <property name="LinkToOpen" display-name-key="Link to open" description-key="With Link handling = App: the drawing or link the user tapped. Use OnChange: If(!IsBlank(Self.LinkToOpen), Launch(Self.LinkToOpen))." of-type="SingleLine.Text" usage="output" />
+    <property name="EditOut" display-name-key="Edit out" description-key="One change made in the editor, as JSON {op, id, kind, asset, data}. Save it to the edits table in OnChange." of-type="Multiple" usage="output" />
     <resources>
       <code path="index.ts" order="1" />
     </resources>

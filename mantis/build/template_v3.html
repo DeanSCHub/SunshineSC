@@ -98,6 +98,43 @@ button{cursor:pointer}
 /* ---------- floating chrome ---------- */
 #top,#bottom,.pop,#sheet{position:fixed;zoom:var(--ui,1)}
 #stage{-webkit-touch-callout:none}
+/* ---------- editor ---------- */
+#edbar,#edhint,#edlg form{zoom:var(--ui,1)}
+#edbar{position:fixed;z-index:12;left:max(12px,env(safe-area-inset-left));top:calc(max(12px,env(safe-area-inset-top)) + 64px);width:132px;padding:8px;display:flex;flex-direction:column;gap:6px}
+#edbar[hidden],#edhint[hidden],#edlg[hidden]{display:none}
+#edbar .edtitle{font-size:12px;color:var(--muted);font-weight:600;padding:2px 4px;letter-spacing:.04em;text-transform:uppercase}
+#edbar button,#edhint button,.edrow button,#edlg button{min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--chrome-solid);font-size:15px;font-weight:600;padding:0 12px;text-align:left}
+#edbar button.on{background:var(--lamp-wash);border-color:var(--lamp);color:var(--lamp-ink)}
+.edcols{display:flex;gap:6px;padding:4px 2px}
+.edcols button{width:26px;min-height:26px!important;height:26px;padding:0!important;border-radius:50%!important;border:2px solid var(--chrome-solid)!important;box-shadow:0 0 0 1px var(--line-strong)}
+.edcols button.on{box-shadow:0 0 0 3px var(--lamp)}
+#edhint{position:fixed;z-index:13;left:50%;transform:translateX(-50%);top:calc(max(12px,env(safe-area-inset-top)) + 64px);display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;font-size:15px;max-width:calc(100vw - 32px)}
+#edhint button.primary,#edlg button.primary{background:var(--lamp);border-color:var(--lamp);color:#fff}
+#edlg{position:fixed;inset:0;z-index:30;background:rgba(10,20,28,.35);display:flex;align-items:center;justify-content:center;padding:16px}
+#edlg form{width:min(420px,100%);padding:18px;border-radius:14px;max-height:90vh;overflow:auto}
+#edlg h2{margin:0 0 12px;font-size:20px}
+#edlg label{display:block;font-size:13px;color:var(--muted);font-weight:600;margin:10px 0 4px}
+#edlg input,#edlg select{width:100%;box-sizing:border-box;min-height:44px;font-size:16px;padding:8px 10px;border-radius:10px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);-webkit-user-select:text;user-select:text}
+#edlg p{font-size:13px;color:var(--muted);margin:10px 0 0}
+#edlg p:empty{display:none}
+.edbtns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.edrow{display:flex;flex-wrap:wrap;gap:8px;padding:4px 10px 8px}
+.edrow button.danger{color:var(--fault);border-color:var(--fault)}
+.edlink{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:14px}
+.edlink span{flex:1;min-width:0;word-break:break-word}
+.edlink button{min-height:36px!important;min-width:36px;padding:0 10px!important;text-align:center!important}
+.edtag{font-size:11px;font-weight:600;color:var(--lamp-ink);background:var(--lamp-wash);border-radius:4px;padding:1px 6px;margin-left:6px}
+#map .edhide{display:none}
+#edits text,#eddraft text{font-family:var(--font)}
+#edits .lbl{fill:var(--ink)}
+#edits .sig{fill:#e5484d;stroke:var(--ink);stroke-width:1.2}
+#edits .post{fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linecap:round}
+#edits .bx{fill:var(--chrome-solid);stroke:var(--ink);stroke-width:1}
+#edits .bxw{fill:none;stroke:var(--ink);stroke-width:1}
+#edits .dia{fill:var(--lamp);stroke:var(--ink);stroke-width:1}
+#edits .tc{fill:#5b5bd6}
+#edits .new{stroke:var(--lamp);stroke-width:1;stroke-dasharray:3 2;fill:none}
+#eddraft *{stroke-dasharray:4 3}
 #top,#bottom{z-index:10}
 .chrome{background:var(--chrome);border:1px solid var(--line);border-radius:var(--r);
   box-shadow:var(--shadow);}
@@ -228,6 +265,8 @@ button{cursor:pointer}
       <g id="L-speed" class="lyr" hidden>__L_speed__</g>
       <g id="L-tpws" class="lyr">__L_tpws__</g>
       <g id="L-kp" class="lyr" hidden>__L_kp__</g>
+      <g id="edits"></g>
+      <g id="eddraft"></g>
       <g id="pins" class="lyr"></g>
       <g id="badges" class="lyr"></g>
       <g id="hl"></g>
@@ -267,6 +306,20 @@ button{cursor:pointer}
     Questions or feedback: <a id="mailLink" href="#">email the Mantis team</a>.<br>Rebuilt from Mantis v3.1.3.</div>
 </div>
 
+<div id="edbar" class="chrome" role="toolbar" aria-label="Map editing" hidden>
+  <b class="edtitle">Editing</b>
+  <button data-tool="select" class="on">Select</button>
+  <button data-tool="asset">Add asset</button>
+  <button data-tool="line">Line</button>
+  <button data-tool="rect">Box</button>
+  <button data-tool="text">Text</button>
+  <div class="edcols" role="radiogroup" aria-label="Drawing colour"></div>
+  <button data-act="hidden">Hidden assets</button>
+  <button data-act="export" hidden>Export edits</button>
+</div>
+<div id="edhint" class="chrome" hidden><span id="edhintText"></span><button data-act="finish" hidden>Finish</button><button data-act="cancel">Cancel</button></div>
+<div id="edlg" hidden><form id="edform" class="chrome" autocomplete="off"><h2 id="edfTitle"></h2><div id="edfFields"></div><p id="edfNote"></p>
+  <div class="edbtns"><button type="button" data-act="fcancel">Cancel</button><button type="submit" class="primary" id="edfSave">Save</button></div></form></div>
 <aside id="sheet" class="chrome" aria-label="Asset details" aria-hidden="true">
   <header>
     <div class="t"><h1 id="sTitle"></h1><div class="kind"><i aria-hidden="true"></i><span id="sKind"></span></div></div>
@@ -628,13 +681,20 @@ function dist2rect(x, y, r){
 // Tap targets: every asset's written name (so tapping "MW291" always opens MW291), plus every link
 // from the PDF (symbols, indicators, TPWS arrows, tags). Drawing bands are reached from the panel instead.
 const TARGETS = [];
-for (const a of ASSETS.values()){
-  if (NAMES[a.id]) { const r = NAMES[a.id]; TARGETS.push({ r: [r[0] - 1.5, r[1] - 1.5, r[2] + 1.5, r[3] + 1.5], l: primaryLink(a), name: 1 }); }
+function buildTargets(){
+  TARGETS.length = 0;
+  for (const a of ASSETS.values()){
+    const r = NAMES[a.id];
+    if (r) TARGETS.push({ r: [r[0] - 1.5, r[1] - 1.5, r[2] + 1.5, r[3] + 1.5], l: primaryLink(a), name: 1 });
+    for (const l of a.links) if (l.ed) TARGETS.push({ r: l.r, l, name: 0 });   // symbols of assets added in the editor
+  }
+  for (const l of LINKS){
+    if (isBand(l) || l.t === "Directions" || l.x !== undefined) continue;
+    if (l.a && !ASSETS.has(l.a)) continue;                                      // hidden in the editor
+    TARGETS.push({ r: l.r, l, name: 0 });
+  }
 }
-for (const l of LINKS){
-  if (isBand(l) || l.t === "Directions" || l.x !== undefined) continue;
-  TARGETS.push({ r: l.r, l, name: 0 });
-}
+buildTargets();
 function hitTest(mx, my){
   const tol = (touchInput ? 28 : 18) / s;
   let best = null, key = null;
@@ -652,7 +712,9 @@ function hitTest(mx, my){
   if (LIVE.size && !badgesEl.hasAttribute("hidden")){
     const bk = Math.min(8, Math.max(0.7, 1.4 / s));
     for (const id of LIVE.keys()){
-      const a = ASSETS.get(id), sp = badgeSpots(a), x0 = sp[0].x - BADGE_R, y = sp[0].y;
+      const a = ASSETS.get(id);
+      if (!a) continue;
+      const sp = badgeSpots(a), x0 = sp[0].x - BADGE_R, y = sp[0].y;
       const x1 = x0 + sp.length * (BADGE_R * 2 + 2) * bk;
       consider([x0, y + BADGE_R - 2 * BADGE_R * bk, x1, y + BADGE_R], primaryLink(a), 1);
     }
@@ -664,7 +726,8 @@ function onTap(px, py){
   const now = performance.now();
   const dbl = now - lastTap.t < 320 && Math.hypot(px - lastTap.x, py - lastTap.y) < 30;
   lastTap = { t: now, x: px, y: py };
-  if (dbl){ fly(scaledAround2(2.2, px, py)); return; }
+  if (dbl && !(EDIT.on && EDIT.tool !== "select")){ fly(scaledAround2(2.2, px, py)); return; }
+  if (EDIT.on && editTap(mx, my, px, py)) return;
   const hit = hitTest(mx, my);
   if (hit && s > fitScale() * 2.2) { select(hit); return; }
   if (s <= fitScale() * 2.2){ fly(scaledAround2(Math.max(4, 0.35 / s), px, py)); return; }
@@ -691,6 +754,7 @@ const ICON = {
 };
 function esc(t){ return String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 function fileTitle(l){
+  if (l.name) return l.name;   // drawings added in the editor carry the name the editor gave them
   let f = decodeURIComponent((l.f || "").replace(/\+/g, " "));
   try { f = decodeURIComponent(f); } catch(e){}
   return f.replace(/\.pdf$/i, "") || l.l || "Open link";
@@ -775,13 +839,14 @@ function select(l, fromSearch){
     r = [l.cx - 7, l.cy - 12, l.cx + 7, l.cy + 6];
   } else if (l.a && ASSETS.has(l.a)){
     const a = ASSETS.get(l.a);
-    title = a.id; kind = assetType(a);
-    const own = uniqueDocs(a.links);
+    title = a.label || a.id; kind = assetType(a);
+    const own = uniqueDocs(a.links.filter(x => !x.anchor));
     own.sort((x, y) => TYPE_ORDER.indexOf(x.t) - TYPE_ORDER.indexOf(y.t));
     const seen = new Set(own.map(fileKey));
     if (LIVE.has(a.id)) body += liveRows(LIVE.get(a.id));
     body += `<h3>Drawings</h3>` + own.map((x, k) => docRow(x, "doc", k === 0)).join("");
-    if (a.links.some(x => x.m)) body += missingRow();
+    if (!own.length && a.edited) body += `<div class="doc missing"><span class="ic" aria-hidden="true">${ICON.doc}</span><span class="dt"><b>No drawings linked yet</b><small>Turn on editing to add one.</small></span></div>`;
+    if (a.links.some(x => x.m && !x.anchor)) body += missingRow();
     // documents filed in this location's folder
     const folder = uniqueDocs(LINKS.filter(x => !isBand(x) && x.u.toUpperCase().includes(`/DRAWINGS/${a.id}/`))).filter(x => !seen.has(fileKey(x)) && seen.add(fileKey(x)));
     if (folder.length) body += `<h3>In this location's folder</h3>` + folder.map(x => docRow(x)).join("");
@@ -795,6 +860,12 @@ function select(l, fromSearch){
     }
     r = a.mark;
     body += areaDrawings((r[0] + r[2]) / 2, (r[1] + r[3]) / 2);
+    if (EDIT.on) body += editRows(a);
+  } else if (l.drawing){
+    title = l.drawing.shape === "text" ? `“${l.drawing.text}”` : l.drawing.shape === "line" ? "Line" : "Box";
+    kind = "Drawing on the map";
+    body = EDIT.on ? editDrawingRows(l) : "";
+    r = l.r;
   } else {
     title = l.l || fileTitle(l);
     kind = l.t;
@@ -849,6 +920,7 @@ for (const st of DATA.labels.filter(t => /^STATION$/i.test(t[0].trim()))){
   }
   if (best){ best.kind = "Station"; best.r = [Math.min(best.r[0], st[1]), best.r[1], Math.max(best.r[2], st[3]), st[4]]; }
 }
+const BASE_INDEX = INDEX.slice();
 let resItems = [], resOn = -1;
 function search(q){
   q = q.trim().toUpperCase().replace(/\s+/g, " ");
@@ -977,6 +1049,370 @@ function updateViewport(){
   vp.setAttribute("height", Math.max(40, Math.min(Y0 + H, y1) - Math.max(Y0, y0)));
 }
 
+/* ================= editor =================
+   The PDF snapshot is the base. Edits sit on top and never change it; deleting an edit puts things back.
+   They come from the app (a Dataverse table, via the Power Apps component) or, with ?edit=1, this browser.
+     asset  a new asset            { type, label, x, y, links: [{ name, url }] }
+     links  changes to an asset    { add: [{ name, url }], remove: [file name], rename }
+     hide   takes an asset off the map
+     draw   { shape: "line" | "rect" | "text", pts: [[x, y], ...], text, color }
+   Each change is sent to the host as { type: "mantis:edit", op: "save" | "delete", id, kind, asset, data }. */
+const EDIT = { on: false, tool: "select", color: "#d33a2c", list: [], draft: null, moving: null, local: false };
+const ED_TYPES = ["Signal", "Points", "Location case", "UPS", "Signal equipment room", "Level crossing", "Track circuit", "Equipment"];
+const ED_BOXED = ["Location case", "UPS", "Signal equipment room", "Equipment"];
+const ED_COLORS = [["#d33a2c", "Red"], ["#2563c9", "Blue"], ["#1f8a4c", "Green"], ["#1d2a33", "Black"]];
+const BASE_ASSETS = new Map(ASSETS);
+const BASE_NAMES = Object.assign({}, NAMES);
+// edits folded into the map file by build/apply_edits.py: drawn like any other edit, but not removable in the app
+const BAKED = (DATA.baked_edits || []).map(normEdit).filter(Boolean);
+const editsEl = $("#edits"), draftEl = $("#eddraft");
+let DRAWN = [];
+const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const r1 = v => Math.round(v * 10) / 10;
+function parseData(d){ if (d && typeof d === "object") return d; try { return JSON.parse(d || "{}") || {}; } catch(e){ return {}; } }
+function normEdit(r){
+  // accepts our own records or rows straight from the Dataverse table (Name, Kind, Asset, Data)
+  const id = r.id || r.Name || r.name, kind = r.kind || r.Kind;
+  if (!id || !kind) return null;
+  return { id: String(id), kind: String(kind).toLowerCase(), asset: String(r.asset || r.Asset || ""), data: parseData(r.data !== undefined ? r.data : r.Data) };
+}
+function editRec(id){ return EDIT.list.find(e => e.id === id); }
+function addedAssetRec(id){ return EDIT.list.find(e => e.kind === "asset" && e.asset === id); }
+function edLink(a, k, j){
+  return { i: `e:${a.id}:${j}`, a: a.id, t: a.edType || "Added drawing", u: k.url, f: String(k.url).split("?")[0].split("/").pop(), l: k.name, ed: 1, r: a.symR || a.mark, name: k.name };
+}
+
+// a new asset's symbol and label, drawn in map units like the PDF's own
+function assetSvg(a, x, y){
+  const t = a.edType, txt = esc(a.label || a.id);
+  if (t === "Signal"){
+    const fs = 16, w = txt.length * fs * .58;
+    a.mark = [x - 12 - w, y - fs * .75, x - 12, y + fs * .25]; a.symR = [x - 9, y - 7, x + 7, y + 9];
+    return `<path class="post" d="M${x - 8} ${y + 8}V${y}H${x - 6}"/><circle class="sig" cx="${x}" cy="${y}" r="6"/><text class="lbl" x="${x - 12}" y="${y + fs * .25}" font-size="${fs}" text-anchor="end">${txt}</text>`;
+  }
+  if (t === "Track circuit"){
+    const fs = 9, w = txt.length * fs * .6;
+    a.mark = a.symR = [x - w / 2, y - fs * .8, x + w / 2, y + fs * .2];
+    return `<text class="tc" x="${x}" y="${y + fs * .2}" font-size="${fs}" text-anchor="middle">${txt}</text>`;
+  }
+  if (t === "Level crossing"){
+    const fs = 14, w = txt.length * fs * .58;
+    a.mark = [x + 10, y - fs * .75, x + 10 + w, y + fs * .25]; a.symR = [x - 7, y - 7, x + 7, y + 7];
+    return `<path class="dia" d="M${x} ${y - 7}L${x + 7} ${y}L${x} ${y + 7}L${x - 7} ${y}Z"/><text class="lbl" x="${x + 10}" y="${y + fs * .25}" font-size="${fs}">${txt}</text>`;
+  }
+  const fs = ED_BOXED.includes(t) ? 12 : 14, w = txt.length * fs * .6 + 10, h = fs + 6;
+  a.mark = a.symR = [x - w / 2, y - h / 2, x + w / 2, y + h / 2];
+  return `<rect class="${ED_BOXED.includes(t) ? "bx" : "bxw"}" x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="${ED_BOXED.includes(t) ? 2 : 0}"/><text class="lbl" x="${x}" y="${y + fs * .35}" font-size="${fs}" text-anchor="middle">${txt}</text>`;
+}
+function drawingSvg(d, draft){
+  const c = esc(d.color || "#d33a2c"), p = d.pts || [];
+  if (d.shape === "line" && p.length) return `<polyline points="${p.map(q => q.join(",")).join(" ")}" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>` +
+    (draft ? p.map(q => `<circle cx="${q[0]}" cy="${q[1]}" r="3" fill="${c}"/>`).join("") : "");
+  if (d.shape === "rect" && p.length === 2) return `<rect x="${Math.min(p[0][0], p[1][0])}" y="${Math.min(p[0][1], p[1][1])}" width="${Math.abs(p[1][0] - p[0][0])}" height="${Math.abs(p[1][1] - p[0][1])}" fill="none" stroke="${c}" stroke-width="2.5" rx="2"/>`;
+  if (d.shape === "rect" && p.length === 1) return `<circle cx="${p[0][0]}" cy="${p[0][1]}" r="3" fill="${c}"/>`;
+  if (d.shape === "text" && p.length) return `<text x="${p[0][0]}" y="${p[0][1]}" font-size="${+d.size || 14}" font-weight="600" fill="${c}">${esc(d.text || "")}</text>`;
+  return "";
+}
+function drawingRect(d){
+  const p = d.pts || [];
+  if (!p.length) return null;
+  if (d.shape === "text"){ const fs = +d.size || 14; return [p[0][0], p[0][1] - fs, p[0][0] + String(d.text || "").length * fs * .6, p[0][1] + 3]; }
+  const xs = p.map(q => q[0]), ys = p.map(q => q[1]);
+  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+}
+
+const HIDE_SKIP = ["Track circuit bonding", "Track circuit", "Axle counter overview"];
+function piecesWithin(rects){
+  const R = rects.map(([r, pad]) => [r[0] - pad, r[1] - pad, r[2] + pad, r[3] + pad]), out = [];
+  const near = c => R.some(r => (c.cx + 1) * CELL > r[0] - 4 && c.cx * CELL < r[2] + 4 && c.cy * CELL + Y0 + CELL > r[1] - 4 && c.cy * CELL + Y0 < r[3] + 4);
+  for (const c of CELLS){
+    if (!near(c) || !c.el.closest("#L-base, #L-tpws")) continue;
+    const was = c.el.style.display; c.el.style.display = "";
+    for (const el of c.el.children){
+      let b; try { b = el.getBBox(); } catch(err){ continue; }
+      if (!b.width && !b.height) continue;
+      const t = el.transform && el.transform.baseVal.consolidate(), m = t ? t.matrix : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+      const xs = [], ys = [];
+      for (const [x, y] of [[b.x, b.y], [b.x + b.width, b.y], [b.x, b.y + b.height], [b.x + b.width, b.y + b.height]]){ xs.push(m.a * x + m.c * y + m.e); ys.push(m.b * x + m.d * y + m.f); }
+      const x0 = Math.min(...xs), y0 = Math.min(...ys), x1 = Math.max(...xs), y1 = Math.max(...ys);
+      if (R.some(r => x0 >= r[0] && y0 >= r[1] && x1 <= r[2] && y1 <= r[3])) out.push(el);
+    }
+    c.el.style.display = was;
+  }
+  return out;
+}
+function applyEdits(){
+  document.querySelectorAll("#map .edhide").forEach(el => el.classList.remove("edhide"));
+  ASSETS.clear();
+  for (const [k, a] of BASE_ASSETS) ASSETS.set(k, Object.assign({}, a, { links: a.links.slice(), label: null, edited: false }));
+  for (const k of Object.keys(NAMES)) if (!(k in BASE_NAMES)) delete NAMES[k];
+  Object.assign(NAMES, BASE_NAMES);
+  let shapes = "", syms = "";
+  DRAWN = [];
+  const ALL = BAKED.concat(EDIT.list);
+  for (const e of ALL){
+    if (e.kind !== "asset") continue;
+    const d = e.data, id = String(d.label || e.asset || "").trim().toUpperCase().replace(/\s+/g, "");
+    if (!id || !isFinite(d.x) || !isFinite(d.y)) continue;
+    const a = { id, label: String(d.label || id).trim(), links: [], types: { [d.type || "Equipment"]: 1 }, edited: true, edType: d.type || "Equipment", editId: e.id };
+    syms += `<g data-ed="${esc(e.id)}">${assetSvg(a, +d.x, +d.y)}</g>`;
+    a.r = [Math.min(a.mark[0], a.symR[0]), Math.min(a.mark[1], a.symR[1]), Math.max(a.mark[2], a.symR[2]), Math.max(a.mark[3], a.symR[3])];
+    a.links.push({ i: "e:" + e.id, a: id, t: a.edType, u: "", f: "", l: id, m: 1, anchor: 1, ed: 1, r: a.symR });
+    (d.links || []).forEach((k, j) => a.links.push(edLink(a, k, j)));
+    ASSETS.set(id, a); NAMES[id] = a.mark;
+  }
+  for (const e of ALL){
+    const a = ASSETS.get(e.asset);
+    if (!a) continue;
+    if (e.kind === "hide"){
+      // hide the drawing pieces that sit wholly inside the asset's name and symbols (track lines run past, so they stay)
+      // signal heads are drawn with a halo a little outside the PDF's link box, so they get more room
+      const rs = [[BASE_NAMES[a.id], 2.5]].concat(a.links.filter(l => !isBand(l) && !l.ed && !HIDE_SKIP.includes(l.t)).map(l => [l.r, l.t === "Signal" ? 4 : 2.5])).filter(x => x[0]);
+      if (!a.editId) for (const el of piecesWithin(rs)) el.classList.add("edhide");
+      ASSETS.delete(a.id); delete NAMES[a.id];
+    } else if (e.kind === "links"){
+      const d = e.data, rm = new Set((d.remove || []).map(x => String(x).toLowerCase()));
+      a.links = a.links.filter(l => l.anchor || l.ed || !rm.has(fileKey(l)));
+      (d.add || []).forEach((k, j) => a.links.push(Object.assign(edLink(a, k, "L" + j), { added: e.id })));
+      if (d.rename) a.label = String(d.rename);
+      if (!BAKED.includes(e)) a.changed = e.id;
+    }
+  }
+  for (const e of ALL){
+    if (e.kind !== "draw") continue;
+    shapes += `<g data-ed="${esc(e.id)}">${drawingSvg(e.data)}</g>`;
+    const r = drawingRect(e.data);
+    if (r && !BAKED.includes(e)) DRAWN.push({ r, l: { drawing: e.data, edId: e.id, r, t: "Drawing", u: "" } });
+  }
+  editsEl.innerHTML = shapes + syms;
+  buildTargets();
+  INDEX.length = 0;
+  for (const e of BASE_INDEX){
+    if (e.asset){ const a = ASSETS.get(e.asset.id); if (a) INDEX.push(Object.assign({}, e, { asset: a, label: a.label || e.label })); }
+    else if (!(e.link && e.link.a && !ASSETS.has(e.link.a))) INDEX.push(e);
+  }
+  for (const a of ASSETS.values()) if (a.editId) INDEX.push({ k: a.id, label: a.label, kind: assetType(a), r: a.mark, asset: a });
+  refreshSelection();
+}
+function refreshSelection(){
+  if (!selected || !$("#sheet").classList.contains("open")) return;
+  const l = selected;
+  if (l.drawing){ const d = DRAWN.find(x => x.l.edId === l.edId); d ? select(d.l) : closeSheet(); return; }
+  const a = l.a && ASSETS.get(l.a);
+  if (l.a && !a) closeSheet(); else if (a) select(primaryLink(a)); else select(l);
+}
+
+// ---------- saving
+function sendEdit(m){
+  if (EDIT.local){ store.set("edits", EDIT.list.map(e => Object.assign({}, e, { data: JSON.stringify(e.data) }))); return; }
+  try { window.parent.postMessage(Object.assign({ type: "mantis:edit" }, m), "*"); } catch(e){}
+}
+function saveEdit(rec){
+  const i = EDIT.list.findIndex(e => e.id === rec.id);
+  if (i >= 0) EDIT.list[i] = rec; else EDIT.list.push(rec);
+  applyEdits();
+  sendEdit({ op: "save", id: rec.id, kind: rec.kind, asset: rec.asset || "", data: JSON.stringify(rec.data) });
+}
+function deleteEdit(id){
+  if (!editRec(id)) return;
+  EDIT.list = EDIT.list.filter(e => e.id !== id);
+  applyEdits();
+  sendEdit({ op: "delete", id });
+}
+function setEdits(list){
+  EDIT.list = (Array.isArray(list) ? list : []).map(normEdit).filter(Boolean);
+  applyEdits();
+}
+
+// ---------- form
+let formDone = null;
+function askForm(title, fields, note, saveLabel){
+  return new Promise(res => {
+    $("#edfTitle").textContent = title;
+    $("#edfNote").textContent = note || "";
+    $("#edfSave").textContent = saveLabel || "Save";
+    $("#edfFields").innerHTML = fields.map((f, k) => `<label for="edf${k}">${esc(f.label)}</label>` + (f.options
+      ? `<select id="edf${k}">${f.options.map(o => `<option${o === f.value ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`
+      : `<input id="edf${k}" type="${f.type || "text"}" value="${esc(f.value || "")}" placeholder="${esc(f.ph || "")}"${f.req ? " required" : ""} autocapitalize="${f.caps ? "characters" : "off"}" spellcheck="false">`)).join("");
+    $("#edlg").hidden = false;
+    formDone = ok => { $("#edlg").hidden = true; formDone = null; res(ok ? fields.map((f, k) => $("#edf" + k).value.trim()) : null); };
+    const first = $("#edfFields input,#edfFields select");
+    if (first && !touchInput) first.focus();
+  });
+}
+$("#edform").addEventListener("submit", e => { e.preventDefault(); if (formDone) formDone(true); });
+$("#edlg").addEventListener("click", e => { if (e.target.closest('[data-act="fcancel"]') || e.target === $("#edlg")) formDone && formDone(false); });
+const LINK_NOTE = "Paste the SharePoint link to the drawing (open it in SharePoint, then Copy link).";
+
+// ---------- tools
+function setTool(t){
+  EDIT.tool = t; EDIT.draft = null; EDIT.moving = null; renderDraft();
+  document.querySelectorAll("#edbar [data-tool]").forEach(b => b.classList.toggle("on", b.dataset.tool === t));
+  const hints = { asset: "Tap the map where the new asset goes.", line: "Tap points along the line.", rect: "Tap one corner of the box, then the opposite corner.", text: "Tap where the text goes." };
+  hint(hints[t] || "");
+}
+function hint(text, finish){
+  $("#edhint").hidden = !text;
+  $("#edhintText").textContent = text || "";
+  $('#edhint [data-act="finish"]').hidden = !finish;
+}
+function renderDraft(){ draftEl.innerHTML = EDIT.draft ? drawingSvg(EDIT.draft, true) : ""; }
+function editTap(mx, my){
+  if (s <= fitScale() * 2.2 && (EDIT.tool !== "select" || EDIT.moving)) return false;   // zoom in first, as for taps
+  const p = [r1(mx), r1(my)];
+  if (EDIT.moving){
+    const rec = editRec(EDIT.moving);
+    EDIT.moving = null; hint("");
+    if (rec){ saveEdit(Object.assign({}, rec, { data: Object.assign({}, rec.data, { x: p[0], y: p[1] }) })); const a = ASSETS.get(rec.asset); if (a) select(primaryLink(a)); }
+    return true;
+  }
+  const t = EDIT.tool;
+  if (t === "select"){
+    const tol = (touchInput ? 28 : 18) / s;
+    const hit = DRAWN.find(d => dist2rect(mx, my, d.r) < tol);
+    if (hit && !hitTest(mx, my)){ select(hit.l); return true; }
+    return false;
+  }
+  if (t === "asset"){ placeAsset(p); return true; }
+  if (t === "line"){
+    EDIT.draft = EDIT.draft || { shape: "line", pts: [], color: EDIT.color };
+    EDIT.draft.pts.push(p); renderDraft();
+    hint(EDIT.draft.pts.length < 2 ? "Tap the next point." : "Keep tapping to add points, or Finish.", EDIT.draft.pts.length >= 2);
+    return true;
+  }
+  if (t === "rect"){
+    if (!EDIT.draft){ EDIT.draft = { shape: "rect", pts: [p], color: EDIT.color }; renderDraft(); hint("Now tap the opposite corner."); return true; }
+    EDIT.draft.pts[1] = p;
+    const d = EDIT.draft; EDIT.draft = null; renderDraft();
+    saveEdit({ id: newId("d"), kind: "draw", asset: "", data: d });
+    setTool("rect");
+    return true;
+  }
+  if (t === "text"){
+    askForm("Text on the map", [{ label: "Text", req: 1 }], "", "Add text").then(v => {
+      if (v && v[0]) saveEdit({ id: newId("d"), kind: "draw", asset: "", data: { shape: "text", pts: [p], text: v[0], color: EDIT.color, size: 14 } });
+    });
+    return true;
+  }
+  return false;
+}
+async function placeAsset(p){
+  const v = await askForm("New asset", [
+    { label: "Asset ID (as written on the map)", ph: "e.g. WVS941", req: 1, caps: 1 },
+    { label: "Type", options: ED_TYPES, value: "Signal" },
+    { label: "Drawing name (optional)", ph: "e.g. WVS941G" },
+    { label: "Drawing link (optional)", type: "url", ph: "https://vlineau.sharepoint.com/..." }], LINK_NOTE, "Place asset");
+  if (!v || !v[0]) return;
+  const id = v[0].toUpperCase().replace(/\s+/g, "");
+  if (BASE_ASSETS.has(id) || addedAssetRec(id)){ await askForm(`${id} is already on the map`, [], "Search for it and add drawings from its panel instead.", "OK"); return; }
+  const links = v[3] ? [{ name: v[2] || id, url: v[3] }] : [];
+  saveEdit({ id: newId("a"), kind: "asset", asset: id, data: { label: v[0].trim(), type: v[1], x: p[0], y: p[1], links } });
+  setTool("select");
+  const a = ASSETS.get(id); if (a) select(primaryLink(a));
+}
+function finishDraft(){
+  const d = EDIT.draft;
+  if (d && d.shape === "line" && d.pts.length >= 2) saveEdit({ id: newId("d"), kind: "draw", asset: "", data: d });
+  EDIT.draft = null; renderDraft(); setTool(EDIT.tool);
+}
+$("#edhint").addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  if (b.dataset.act === "finish") finishDraft();
+  else { EDIT.moving = null; setTool("select"); }
+});
+$(".edcols").innerHTML = ED_COLORS.map(([c, n]) => `<button style="background:${c}" data-col="${c}" aria-label="${n}" role="radio"></button>`).join("");
+function setColor(c){
+  EDIT.color = c;
+  document.querySelectorAll(".edcols button").forEach(b => { b.classList.toggle("on", b.dataset.col === c); b.setAttribute("aria-checked", b.dataset.col === c); });
+  if (EDIT.draft){ EDIT.draft.color = c; renderDraft(); }
+}
+setColor(EDIT.color);
+$("#edbar").addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.tool) setTool(b.dataset.tool);
+  else if (b.dataset.col) setColor(b.dataset.col);
+  else if (b.dataset.act === "hidden") showHidden();
+  else if (b.dataset.act === "export") exportEdits();
+});
+
+// ---------- panel controls
+function editRows(a){
+  const added = addedAssetRec(a.id);
+  const links = added ? (added.data.links || []).map((k, j) => ({ name: k.name, key: "n" + j, tag: "" }))
+    : a.links.filter(l => !l.anchor && !isBand(l) && !l.m).map(l => ({ name: l.ed ? l.name : fileTitle(l), key: l.ed ? "a" + l.i.split(":L").pop() : "f" + fileKey(l), tag: l.ed ? "added" : "" }));
+  let h = `<h3>Edit ${added ? "this new asset" : "this asset"}</h3>`;
+  h += links.map(k => `<div class="edlink"><span>${esc(k.name)}${k.tag ? `<i class="edtag">${k.tag}</i>` : ""}</span><button data-ed="rmlink" data-k="${esc(k.key)}" aria-label="Remove ${esc(k.name)}">✕</button></div>`).join("");
+  h += `<div class="edrow"><button data-ed="addlink">Add drawing link</button><button data-ed="rename">Rename</button>`;
+  if (added) h += `<button data-ed="move">Move</button><button data-ed="delasset" class="danger">Delete asset</button>`;
+  else h += (a.changed ? `<button data-ed="undo">Undo my changes</button>` : "") + `<button data-ed="hide" class="danger">Hide from map</button>`;
+  return h + `</div>`;
+}
+function editDrawingRows(l){
+  return `<h3>Edit drawing</h3><div class="edrow">${ED_COLORS.map(([c, n]) => `<button data-ed="recolor" data-c="${c}" style="color:${c}">${n}</button>`).join("")}</div>
+    <div class="edrow">${l.drawing.shape === "text" ? `<button data-ed="retext">Change text</button>` : ""}<button data-ed="deldrawing" class="danger">Delete</button></div>`;
+}
+function linksRec(a){ return editRec("L:" + a.id) || { id: "L:" + a.id, kind: "links", asset: a.id, data: { add: [], remove: [] } }; }
+function cloneRec(r){ return { id: r.id, kind: r.kind, asset: r.asset, data: JSON.parse(JSON.stringify(r.data)) }; }
+$("#sBody").addEventListener("click", async e => {
+  const b = e.target.closest("[data-ed]"); if (!b || !EDIT.on || !selected) return;
+  const act = b.dataset.ed, l = selected;
+  if (l.drawing){
+    const rec = editRec(l.edId); if (!rec) return;
+    if (act === "deldrawing"){ closeSheet(); deleteEdit(rec.id); }
+    else if (act === "recolor"){ const r = cloneRec(rec); r.data.color = b.dataset.c; saveEdit(r); }
+    else if (act === "retext"){ const v = await askForm("Change text", [{ label: "Text", value: rec.data.text, req: 1 }]); if (v && v[0]){ const r = cloneRec(rec); r.data.text = v[0]; saveEdit(r); } }
+    return;
+  }
+  const a = ASSETS.get(l.a); if (!a) return;
+  const added = addedAssetRec(a.id);
+  if (act === "addlink"){
+    const v = await askForm(`Add a drawing to ${a.label || a.id}`, [{ label: "Drawing name", ph: "e.g. " + a.id + "G", req: 1 }, { label: "Drawing link", type: "url", req: 1, ph: "https://vlineau.sharepoint.com/..." }], LINK_NOTE, "Add");
+    if (!v) return;
+    if (added){ const r = cloneRec(added); (r.data.links = r.data.links || []).push({ name: v[0], url: v[1] }); saveEdit(r); }
+    else { const r = cloneRec(linksRec(a)); (r.data.add = r.data.add || []).push({ name: v[0], url: v[1] }); saveEdit(r); }
+  } else if (act === "rmlink"){
+    const k = b.dataset.k;
+    if (added){ const r = cloneRec(added); r.data.links.splice(+k.slice(1), 1); saveEdit(r); return; }
+    const r = cloneRec(linksRec(a));
+    if (k[0] === "a") r.data.add.splice(+k.slice(1), 1);
+    else (r.data.remove = r.data.remove || []).push(k.slice(1));
+    saveEdit(r);
+  } else if (act === "rename"){
+    const v = await askForm(`Rename ${a.label || a.id}`, [{ label: "Name shown in the panel", value: a.label || a.id, req: 1 }]);
+    if (!v || !v[0]) return;
+    if (added){ const r = cloneRec(added); r.data.label = v[0]; r.asset = v[0].toUpperCase().replace(/\s+/g, ""); saveEdit(r); const n = ASSETS.get(r.asset); if (n) select(primaryLink(n)); }
+    else { const r = cloneRec(linksRec(a)); r.data.rename = v[0]; saveEdit(r); }
+  } else if (act === "move"){
+    EDIT.moving = added.id; hint(`Tap the new spot for ${a.label || a.id}.`);
+  } else if (act === "delasset"){
+    const v = await askForm(`Delete ${a.label || a.id}?`, [], "This removes the asset you added, and its drawing links.", "Delete");
+    if (v){ closeSheet(); deleteEdit(added.id); }
+  } else if (act === "hide"){
+    const v = await askForm(`Hide ${a.id} from the map?`, [], "It's covered over and can't be tapped or searched. Bring it back any time from Hidden assets.", "Hide");
+    if (v){ closeSheet(); saveEdit({ id: "H:" + a.id, kind: "hide", asset: a.id, data: {} }); }
+  } else if (act === "undo"){
+    deleteEdit("L:" + a.id);
+  }
+});
+async function showHidden(){
+  const hidden = EDIT.list.filter(e => e.kind === "hide");
+  if (!hidden.length){ await askForm("Hidden assets", [], "Nothing is hidden.", "OK"); return; }
+  const v = await askForm("Bring back a hidden asset", [{ label: "Asset", options: hidden.map(e => e.asset) }], "", "Show on map");
+  if (v) deleteEdit("H:" + v[0]);
+}
+function exportEdits(){
+  const blob = new Blob([JSON.stringify(EDIT.list, null, 1)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "mantis-edits.json"; a.click();
+}
+function setEditMode(on){
+  EDIT.on = !!on;
+  $("#edbar").hidden = !EDIT.on;
+  document.body.classList.toggle("editing", EDIT.on);
+  setTool("select");
+  if (!EDIT.on) hint("");
+  refreshSelection();
+}
+
 /* ================= start ================= */
 minS = fitScale() * 0.85;
 layoutSvg();
@@ -1016,7 +1452,23 @@ window.addEventListener("message", e => {
   const d = e.data || {};
   if (d.type === "mantis:select") window.Mantis.select(d.id);
   else if (d.type === "mantis:ui") window.Mantis.setUiScale(d.k);
+  else if (d.type === "mantis:edits") setEdits(d.list);
+  else if (d.type === "mantis:editmode") setEditMode(d.on);
 });
+window.Mantis.setEdits = setEdits;
+window.Mantis.setEditMode = setEditMode;
+window.Mantis.edits = () => EDIT.list.map(e => Object.assign({}, e));
+// try the editor in a plain browser: Mantis_Sunshine.html?edit=1 (edits stay in this browser; Export edits to save them)
+if (BAKED.length) applyEdits();
+(function localEditing(){
+  let on = false;
+  try { on = new URLSearchParams(location.search).get("edit") === "1"; } catch(e){}
+  if (!on || window.MANTIS_EMBED) return;
+  EDIT.local = true;
+  $('#edbar [data-act="export"]').hidden = false;
+  setEdits(store.get("edits", []));
+  setEditMode(true);
+})();
 // inside a Power Apps code component the host can ask for links to be handed back (some players block pop-ups)
 if (window.MANTIS_EMBED && window.MANTIS_EMBED.links === "app") document.addEventListener("click", e => {
   const a = e.target.closest && e.target.closest("a[href]");

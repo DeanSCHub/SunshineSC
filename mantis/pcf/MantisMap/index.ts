@@ -5,7 +5,9 @@ import { MAP_HTML } from "./generated/map";
  * The Mantis map (one self-contained page) runs in an iframe so its full-page styles can't
  * touch the app around it. The two sides talk with postMessage:
  *   app -> map  { type: "mantis:select", id }
+ *   app -> map  { type: "mantis:edits", list } / { type: "mantis:editmode", on }
  *   map -> app  { type: "mantis:selected", id, kind } / { type: "mantis:closed" } / { type: "mantis:open", url }
+ *               { type: "mantis:edit", op, id, kind, asset, data }
  */
 export class MantisMap implements ComponentFramework.StandardControl<IInputs, IOutputs> {
     private frame!: HTMLIFrameElement;
@@ -18,6 +20,9 @@ export class MantisMap implements ComponentFramework.StandardControl<IInputs, IO
     private kind = "";
     private link = "";
     private uiK = 0;
+    private editsJson: string | null = null;
+    private editMode = false;
+    private editOut = "";
     private onMessage = (e: MessageEvent) => this.receive(e);
 
     public init(context: ComponentFramework.Context<IInputs>, notifyOutputChanged: () => void, _state: ComponentFramework.Dictionary, container: HTMLDivElement): void {
@@ -32,6 +37,7 @@ export class MantisMap implements ComponentFramework.StandardControl<IInputs, IO
             this.ready = true;
             this.uiK = 0;
             this.syncScale();
+            this.sendEdits();
             if (this.pendingAsset) this.post(this.pendingAsset);
         });
         container.appendChild(this.frame);
@@ -55,6 +61,15 @@ export class MantisMap implements ComponentFramework.StandardControl<IInputs, IO
         // the player may have shrunk the whole app to fit the screen; let it settle, then measure
         setTimeout(() => this.syncScale(), 50);
 
+        // edits: re-send only when the app's list or the edit switch actually changes
+        const edits = context.parameters.Edits.raw || "";
+        const editMode = context.parameters.EditMode.raw === true;
+        if (edits !== this.editsJson || editMode !== this.editMode) {
+            this.editsJson = edits;
+            this.editMode = editMode;
+            this.sendEdits();
+        }
+
         const asset = (context.parameters.Asset.raw || "").trim();
         if (asset !== this.lastAsset) {
             this.lastAsset = asset;
@@ -64,10 +79,11 @@ export class MantisMap implements ComponentFramework.StandardControl<IInputs, IO
     }
 
     public getOutputs(): IOutputs {
-        const out: IOutputs = { SelectedAsset: this.selected, SelectedKind: this.kind, LinkToOpen: this.link };
-        // hand a link out once, then clear it so tapping the same drawing again still fires OnChange
-        if (this.link) {
+        const out: IOutputs = { SelectedAsset: this.selected, SelectedKind: this.kind, LinkToOpen: this.link, EditOut: this.editOut };
+        // hand a link or an edit out once, then clear it, so the same thing twice still fires OnChange
+        if (this.link || this.editOut) {
             this.link = "";
+            this.editOut = "";
             setTimeout(() => this.notify(), 0);
         }
         return out;
@@ -90,6 +106,19 @@ export class MantisMap implements ComponentFramework.StandardControl<IInputs, IO
         this.frame.contentWindow?.postMessage({ type: "mantis:ui", k }, "*");
     }
 
+    private sendEdits(): void {
+        if (!this.ready) return;
+        let list: unknown[] = [];
+        try {
+            const v = JSON.parse(this.editsJson || "[]");
+            if (Array.isArray(v)) list = v;
+        } catch {
+            list = [];
+        }
+        this.frame.contentWindow?.postMessage({ type: "mantis:edits", list }, "*");
+        this.frame.contentWindow?.postMessage({ type: "mantis:editmode", on: this.editMode }, "*");
+    }
+
     private post(id: string): void {
         this.pendingAsset = "";
         this.frame.contentWindow?.postMessage({ type: "mantis:select", id }, "*");
@@ -106,6 +135,8 @@ export class MantisMap implements ComponentFramework.StandardControl<IInputs, IO
             this.kind = "";
         } else if (d.type === "mantis:open" && d.url) {
             this.link = String(d.url);
+        } else if (d.type === "mantis:edit" && d.id) {
+            this.editOut = JSON.stringify({ op: d.op, id: d.id, kind: d.kind || "", asset: d.asset || "", data: d.data || "" });
         } else {
             return;
         }
