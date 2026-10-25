@@ -1,5 +1,5 @@
 {
-  "_about": "Corrections to the Mantis PDF links, from the link check (25 Oct 2026). Applied on every build.",
+  "_about": "Corrections to the Mantis PDF links, from the link check and the SharePoint file check (25 Oct 2026). Applied on every build.",
   "stacked_keep": {
     "MW362": "MW362G.pdf",
     "TNT968": "TNT968G.pdf",
@@ -12,11 +12,37 @@
   "use_address": {
     "wvs933tpws.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/WVS933TPWS.pdf",
     "sun840w.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/SUN840W.pdf",
-    "dpk919tpws.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/DPK919TPWS.pdf"
+    "dpk919tpws.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/DPK919TPWS.pdf",
+    "dpk939zb axle counter overview.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/DPK939ZBAxleCounterOverview.pdf",
+    "mw210g 65.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/MW210G65.pdf",
+    "sspgr.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/SSPGR.pdf",
+    "aspgr.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/ASPGR.pdf",
+    "yspg.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/YSPG.pdf",
+    "tspg.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/TSPG.pdf",
+    "4t.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/4T.pdf",
+    "a30t.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/A30T.pdf",
+    "a4t.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/A4T.pdf"
   },
   "relink": [
-    {"file": "WVS_G8377A.PDF", "near": [12814, 878], "to": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/WVS903G.pdf", "asset": "WVS903", "type": "Signal"}
+    {
+      "file": "WVS_G8377A.PDF",
+      "near": [
+        12814,
+        878
+      ],
+      "to": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/WVS903G.pdf",
+      "asset": "WVS903",
+      "type": "Signal"
+    }
   ],
-  "no_drawing_needed": ["SUN946", "SUN571"],
-  "ignore_for_now": ["MW325 CHCPB", "A26T", "A364UPS", "26kVA GEN"]
+  "no_drawing_needed": [
+    "SUN946",
+    "SUN571"
+  ],
+  "ignore_for_now": [
+    "MW325 CHCPB",
+    "A26T",
+    "A364UPS",
+    "26kVA GEN"
+  ]
 }

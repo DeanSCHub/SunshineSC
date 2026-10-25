@@ -46,7 +46,7 @@ data["issues"] = [x for x in data["issues"]
                   if not (x["kind"] == "Two links stacked on one symbol")
                   and not (x["kind"] == "Same drawing, different addresses")
                   and x.get("asset") not in ov["no_drawing_needed"]]
-data["override_log"] = log
+data["override_log"] = data.get("override_log", []) + log
 json.dump(data, open(OUT, "w"))
 print("\n".join(log))
 print("links", len(L), "->", len(data["links"]))

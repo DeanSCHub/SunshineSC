@@ -15,6 +15,7 @@ and Claude can carry on from here.
 - build/live_mock.py        sample live data for the live badges mockup
 - build/taps.py, perf3.py   the tap and smoothness checks
 - build/report.py           makes the link check workbook
+- build/filecheck.py        checks every link against a SharePoint file list export; makes the file check workbook
 
 ## Rebuild the map from the data
 Apply the approved styling (tags by type, TPWS boxes, footprint signals), then build the page:
@@ -27,6 +28,16 @@ Live badges mockup (sample faults and work orders on real asset IDs):
 
     python3 build/live_mock.py out/styled.json out/live.json
     MANTIS_CHUNK=1 python3 build/page.py out/live.json build/template_v3.html out/Mantis_live_mockup.html
+
+## SharePoint file check
+Export Shared Documents > Sunshine to Excel (all items, no folders), then:
+
+    python3 build/filecheck.py MantisSunshineDrawings.xlsx data/mantis_v3c.json out/Mantis_file_check.xlsx
+
+It prints `use_address` entries for links it can fix (same file name in ~Assets). Add them to
+build/overrides.json and apply with:
+
+    python3 build/apply_overrides.py data/mantis_v3c.json build/overrides.json data/mantis_v3c.json
 
 ## Live badges
 The viewer draws a badge beside any asset that has entries in `live` in the data:
@@ -42,4 +53,8 @@ JDE work order list just needs to produce the same list, matched by asset ID as 
 - Six missing crossovers fixed; all link-check answers applied (incl. WVS903).
 - Styling approved and part of the build: tag colours by type, TPWS boxes, footprint signals.
 - Live badges mocked up with sample data; needs the real fault app and work order exports to go live.
-- Next: SharePoint asset list (needs the Drawings library file list export).
+- SharePoint file check done (export of 25 Oct 2026): 9 broken links fixed to their ~Assets copies.
+  Still broken: axle counter overviews for DPK935ZB, DPK927ZB, DPK932ZB, DPK820ZB (no file in SharePoint)
+  and two links with no file name. 103 drawings in ~Assets aren't linked from the map; see the workbook.
+- Parked: live badges (needs fault app and JDE work order exports).
+- Left for now (no drawings): MW325 CHCPB, A26T, A364UPS, 26kVA GEN.
