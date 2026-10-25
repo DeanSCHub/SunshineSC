@@ -96,7 +96,8 @@ button{cursor:pointer}
 #hl .ring{transform-box:fill-box;transform-origin:center}
 
 /* ---------- floating chrome ---------- */
-#top,#bottom,.pop,#sheet{position:fixed}
+#top,#bottom,.pop,#sheet{position:fixed;zoom:var(--ui,1)}
+#stage{-webkit-touch-callout:none}
 #top,#bottom{z-index:10}
 .chrome{background:var(--chrome);border:1px solid var(--line);border-radius:var(--r);
   box-shadow:var(--shadow);}
@@ -321,7 +322,7 @@ $("#btnTheme").onclick = () => { const t = currentTheme() === "dark" ? "light" :
 let s = 1, tx = 0, ty = 0, dirty = true, minS = 0.02, maxS = 6;
 function vw(){ return stage.clientWidth; }
 function vh(){ return stage.clientHeight; }
-function fitScale(){ return Math.min(vw() / W, (vh() - 150) / H); }
+function fitScale(){ return Math.min(vw() / W, (vh() - 150 * uiK) / H); }
 function clamp(){
   s = Math.max(minS, Math.min(maxS, s));
   const mw = W * s, mh = H * s, pad = 80;
@@ -334,6 +335,7 @@ function clamp(){
    is what crashes tablets). While you drag, fling or pinch, the last drawing is moved/stretched on
    the graphics chip (cheap, smooth). Once things settle - or the view runs off the drawn area -
    it is redrawn sharp at the new position. */
+let touchInput = false, uiK = 1;   // uiK: how much the buttons and panels are scaled up (see setUiScale)
 const OV = 0.6, svgEl = document.getElementById("map"), badgesEl = document.getElementById("badges");
 let cv = { s: 1, tx: 0, ty: 0 }, box = { ox: 0, oy: 0, w: 1, h: 1 }, lastCommit = 0, flying = false;
 function layoutSvg(){
@@ -406,10 +408,10 @@ function fitAll(animate){
 }
 function sheetOffset(){
   const open = $("#sheet").classList.contains("open");
-  return open && vw() > 820 ? 384 : 0;
+  return open && vw() > 820 ? 384 * uiK : 0;
 }
 function viewFor(x0, y0, x1, y1, maxScale){
-  const avW = vw() - sheetOffset(), avH = vh() - (vw() > 820 ? 170 : 260);
+  const avW = vw() - sheetOffset(), avH = vh() - (vw() > 820 ? 170 : 260) * uiK;
   let ns = Math.min(avW / Math.max(x1 - x0, 1), avH / Math.max(y1 - y0, 1)) * 0.6;
   ns = Math.max(minS, Math.min(maxScale || 2.2, ns));
   const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2 - Y0;
@@ -441,6 +443,7 @@ function fly(t){
 const pts = new Map();
 let gesture = null, inertia = null, lastTap = { t: 0, x: 0, y: 0 };
 stage.addEventListener("pointerdown", e => {
+  touchInput = e.pointerType === "touch";
   if (e.button !== undefined && e.button > 0) return;
   stage.setPointerCapture(e.pointerId);
   pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -633,7 +636,7 @@ for (const l of LINKS){
   TARGETS.push({ r: l.r, l, name: 0 });
 }
 function hitTest(mx, my){
-  const tol = 18 / s;
+  const tol = (touchInput ? 28 : 18) / s;
   let best = null, key = null;
   const pinsOn = !$("#pins").hasAttribute("hidden");
   const consider = (r, l, name) => {
@@ -753,6 +756,7 @@ function liveRows(list){
   return `<div class="livehd"><h3>Live work${LIVE_INFO.sample ? '<span class="sample">Sample data</span>' : ""}</h3><small>Updated ${hm}</small></div>` + rows;
 }
 function missingRow(l){
+  if (l && l.nd) return `<div class="doc missing"><span class="ic" aria-hidden="true">${ICON.doc}</span><span class="dt"><b>No drawing for this track</b><small>There's no bonding drawing for this track circuit in Mantis.</small></span></div>`;
   return `<div class="doc missing"><span class="ic" aria-hidden="true">${ICON.doc}</span><span class="dt"><b>Drawing not linked</b><small>The Mantis link here has no file name. Add it in the asset list.</small></span></div>`;
 }
 let selected = null;
@@ -810,7 +814,7 @@ function select(l, fromSearch){
   else {
     // nudge the map if the sheet would cover the selection
     const sx = r[2] * s + tx, sy = (r[3] - Y0) * s + ty;
-    if (vw() > 820 && sx > vw() - 400) fly({ s, tx: tx - (sx - (vw() - 440)), ty });
+    if (vw() > 820 && sx > vw() - 400 * uiK) fly({ s, tx: tx - (sx - (vw() - 440 * uiK)), ty });
     else if (vw() <= 820 && sy > vh() * 0.4) fly({ s, tx, ty: ty - (sy - vh() * 0.32) });
   }
 }
@@ -1001,7 +1005,18 @@ window.Mantis = {
   assets(){ return [...ASSETS.values()].map(a => ({ id: a.id, kind: assetType(a), x: a.mark[0], y: a.mark[1] })); },
   onSelect: null
 };
-window.addEventListener("message", e => { const d = e.data || {}; if (d.type === "mantis:select") window.Mantis.select(d.id); });
+window.Mantis.setUiScale = k => {
+  k = Math.min(1.4, Math.max(1, +k || 1));
+  uiK = k;
+  root.style.setProperty("--ui", k.toFixed(3));
+  minS = fitScale() * 0.85; clamp(); layoutSvg(); commit(); mark();
+  return k;
+};
+window.addEventListener("message", e => {
+  const d = e.data || {};
+  if (d.type === "mantis:select") window.Mantis.select(d.id);
+  else if (d.type === "mantis:ui") window.Mantis.setUiScale(d.k);
+});
 // inside a Power Apps code component the host can ask for links to be handed back (some players block pop-ups)
 if (window.MANTIS_EMBED && window.MANTIS_EMBED.links === "app") document.addEventListener("click", e => {
   const a = e.target.closest && e.target.closest("a[href]");

@@ -57,6 +57,8 @@ def asset_url(f):
 broken, fixes, not_checked = [], {}, collections.Counter()
 linked = set()
 for l in L:
+    if l.get("nd"):      # track names with no drawing, added by track_names.py
+        continue
     p = spath(l["u"])
     if p is None:
         not_checked["Google Maps directions" if "google." in l["u"] else "SharePoint sharing link (can't be checked from a file list)"] += 1

@@ -13,7 +13,7 @@ The file to import is `MantisMap_<version>.zip`, an unmanaged solution containin
    and turns on **Allow publishing of canvas apps with code components**. Without this, the control
    won't appear in the app.
 2. **Import the solution.** make.powerapps.com > pick the environment > Solutions > Import solution >
-   choose `MantisMap_1_0_0.zip` > Next > Import.
+   choose the latest `MantisMap_x_y_z.zip` > Next > Import.
 
 ## Add the map to an app
 
@@ -40,6 +40,19 @@ That's all you need for a working map. The properties below are optional.
 - **Drawings on phones/tablets:** if tapping a drawing does nothing in the Power Apps mobile app, set
   `LinkHandling` to `App` and set the map's **OnChange** to
   `If(!IsBlank(Self.LinkToOpen), Launch(Self.LinkToOpen))`
+
+## iPad
+
+Built and tested for the iPad (A16) running a 16:9 app. The iPad's screen is wider than 16:9 is tall, so Power Apps
+shows the app at about 86% size with black bars top and bottom. The map notices this and enlarges its buttons,
+search box and panels to make up for it, so they stay full size for fingers. Pinch to zoom, drag to pan,
+tap a name or symbol to open it.
+
+- **Lock the app to landscape:** in Studio, Settings > Display > Orientation **Landscape**, and turn on
+  **Lock orientation**. In portrait a 16:9 app shrinks to about 60% and the map gets small.
+- Make the map fill the screen (X `0`, Y `0`, Width `Parent.Width`, Height `Parent.Height`).
+- Optional: turning off **Scale to fit** (Settings > Display) lets the app use the whole iPad screen with no
+  black bars; the map adjusts itself either way.
 
 ## Updating the map
 

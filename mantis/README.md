@@ -46,6 +46,11 @@ build/overrides.json and apply with:
 
     python3 build/apply_overrides.py data/mantis_v3c.json build/overrides.json data/mantis_v3c.json
 
+Every track circuit name on the map is tappable. Names with no bonding drawing get a "No drawing for this
+track" link; re-run this after rebuilding the data from the PDF (safe to run more than once):
+
+    python3 build/track_names.py data/mantis_v3c.json
+
 ## Live badges
 The viewer draws a badge beside any asset that has entries in `live` in the data:
 red `!` = open fault (pulses if reported in the last 2 hours), outlined `!` = fault cleared in the last 7 days,
@@ -63,7 +68,8 @@ JDE work order list just needs to produce the same list, matched by asset ID as 
 - SharePoint file check done (export of 25 Oct 2026): 9 broken links fixed to their ~Assets copies.
   Still broken: axle counter overviews for DPK935ZB, DPK927ZB, DPK932ZB, DPK820ZB (no file in SharePoint)
   and two links with no file name. 103 drawings in ~Assets aren't linked from the map; see the workbook.
-- Power Apps: code component + solution built (MantisMap 1.0.0), tested in a local harness;
-  not yet imported into an environment.
+- Power Apps: code component + solution (MantisMap 1.0.1), tested in a local harness and in iPad (A16)
+  emulation inside a scaled 16:9 app; not yet imported into an environment.
+- All 439 track circuit names tappable (14 added with "No drawing for this track").
 - Parked: live badges (needs fault app and JDE work order exports).
 - Left for now (no drawings): MW325 CHCPB, A26T, A364UPS, 26kVA GEN.

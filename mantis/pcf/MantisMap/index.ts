@@ -17,6 +17,7 @@ export class MantisMap implements ComponentFramework.StandardControl<IInputs, IO
     private selected = "";
     private kind = "";
     private link = "";
+    private uiK = 0;
     private onMessage = (e: MessageEvent) => this.receive(e);
 
     public init(context: ComponentFramework.Context<IInputs>, notifyOutputChanged: () => void, _state: ComponentFramework.Dictionary, container: HTMLDivElement): void {
@@ -29,6 +30,8 @@ export class MantisMap implements ComponentFramework.StandardControl<IInputs, IO
         this.frame.style.cssText = "border:0;display:block;width:100%;height:100%";
         this.frame.addEventListener("load", () => {
             this.ready = true;
+            this.uiK = 0;
+            this.syncScale();
             if (this.pendingAsset) this.post(this.pendingAsset);
         });
         container.appendChild(this.frame);
@@ -48,6 +51,9 @@ export class MantisMap implements ComponentFramework.StandardControl<IInputs, IO
             const cfg = `<script>window.MANTIS_EMBED=${JSON.stringify({ links: mode })};</script>`;
             this.frame.srcdoc = MAP_HTML.replace("<head>", "<head>" + cfg);
         }
+
+        // the player may have shrunk the whole app to fit the screen; let it settle, then measure
+        setTimeout(() => this.syncScale(), 50);
 
         const asset = (context.parameters.Asset.raw || "").trim();
         if (asset !== this.lastAsset) {
@@ -69,6 +75,19 @@ export class MantisMap implements ComponentFramework.StandardControl<IInputs, IO
 
     public destroy(): void {
         window.removeEventListener("message", this.onMessage);
+    }
+
+    /**
+     * A 16:9 app on an iPad is shown at about 86% size, which shrinks the map's buttons and text with it.
+     * Measure how much the player has scaled us and ask the map to enlarge its controls to make up for it.
+     */
+    private syncScale(): void {
+        if (!this.ready || !this.frame.offsetWidth) return;
+        const shown = this.frame.getBoundingClientRect().width / this.frame.offsetWidth;
+        const k = shown > 0 && shown < 0.98 ? Math.min(1.4, 1 / shown) : 1;
+        if (Math.abs(k - this.uiK) < 0.02) return;
+        this.uiK = k;
+        this.frame.contentWindow?.postMessage({ type: "mantis:ui", k }, "*");
     }
 
     private post(id: string): void {
