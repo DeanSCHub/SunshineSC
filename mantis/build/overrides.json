@@ -1,0 +1,22 @@
+{
+  "_about": "Corrections to the Mantis PDF links, from the link check (25 Oct 2026). Applied on every build.",
+  "stacked_keep": {
+    "MW362": "MW362G.pdf",
+    "TNT968": "TNT968G.pdf",
+    "MW429": "MW429G.pdf",
+    "WVS924/WVS928": "WVS928TPWS.pdf",
+    "WVS933": "WVS933TPWS.pdf",
+    "MW110": "MW110G.pdf",
+    "WVS937": "WVS937G.pdf"
+  },
+  "use_address": {
+    "wvs933tpws.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/WVS933TPWS.pdf",
+    "sun840w.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/SUN840W.pdf",
+    "dpk919tpws.pdf": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/DPK919TPWS.pdf"
+  },
+  "relink": [
+    {"file": "WVS_G8377A.PDF", "near": [12814, 878], "to": "https://vlineau.sharepoint.com/sites/SCMantis/Shared%20Documents/Sunshine/Drawings/~Assets/WVS903G.pdf", "asset": "WVS903", "type": "Signal"}
+  ],
+  "no_drawing_needed": ["SUN946", "SUN571"],
+  "ignore_for_now": ["MW325 CHCPB", "A26T", "A364UPS", "26kVA GEN"]
+}

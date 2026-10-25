@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Mantis Sunshine</title>
+<style>
+:root{
+  --font:"DIN Alternate","Bahnschrift","D-DIN","Barlow","Helvetica Neue",Arial,sans-serif;
+  --font-cond:"DIN Condensed","Bahnschrift SemiBold SemiConden","Bahnschrift","Barlow Condensed","Arial Narrow",sans-serif;
+  --r:12px;
+}
+:root,:root[data-theme="light"]{
+  color-scheme:light;
+  --paper:#eef2f5;
+  --ink:#1d2a33;
+  --muted:#5b6b76;
+  --line:rgba(29,42,51,.12);
+  --line-strong:rgba(29,42,51,.22);
+  --chrome:#fafcfd;
+  --chrome-solid:#fafcfd;
+  --hover:rgba(29,42,51,.06);
+  --lamp:#c27c07;
+  --lamp-ink:#8a5600;
+  --lamp-wash:rgba(242,179,61,.18);
+  --view:rgba(194,124,7,.9);
+  --shadow:0 1px 2px rgba(17,30,40,.08),0 8px 28px rgba(17,30,40,.12);
+__PAL_LIGHT__
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#0e1a22;
+  --ink:#d9e3ea;
+  --muted:#8fa1ad;
+  --line:rgba(201,214,223,.13);
+  --line-strong:rgba(201,214,223,.24);
+  --chrome:#13232d;
+  --chrome-solid:#13232d;
+  --hover:rgba(201,214,223,.07);
+  --lamp:#f2b33d;
+  --lamp-ink:#f2b33d;
+  --lamp-wash:rgba(242,179,61,.14);
+  --view:rgba(242,179,61,.95);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+__PAL_DARK__
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#0e1a22;--ink:#d9e3ea;--muted:#8fa1ad;--line:rgba(201,214,223,.13);--line-strong:rgba(201,214,223,.24);
+    --chrome:#13232d;--chrome-solid:#13232d;--hover:rgba(201,214,223,.07);--lamp:#f2b33d;--lamp-ink:#f2b33d;
+    --lamp-wash:rgba(242,179,61,.14);--view:rgba(242,179,61,.95);--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+__PAL_DARK__
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--paper);color:var(--ink);font-family:var(--font);
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--lamp);outline-offset:2px}
+
+/* ---------- map ---------- */
+#stage{position:fixed;inset:0;overflow:hidden;touch-action:none;cursor:grab;background:var(--paper)}
+#stage.dragging{cursor:grabbing}
+#world{position:absolute;left:0;top:0;transform-origin:0 0}
+#world.moving{will-change:transform}
+#map{display:block;overflow:hidden}
+#map.lod0 .z1,#map.lod0 .z2,#map.lod1 .z1{display:none}
+#map text{font-family:var(--font);text-rendering:geometricPrecision}
+#map .b{font-weight:700}
+.m path{fill:none}
+.lyr[hidden]{display:none}
+#pins path{fill:var(--lamp);stroke:var(--paper);stroke-width:1.2}
+#pins circle{fill:var(--paper)}
+#hl rect{fill:none;stroke:var(--lamp);stroke-width:3;vector-effect:non-scaling-stroke}
+#hl .ring{fill:none;stroke:var(--lamp);stroke-width:2;vector-effect:non-scaling-stroke;opacity:0}
+@media (prefers-reduced-motion:no-preference){
+  #hl .ring.go{animation:lamp 1.1s ease-out 1}
+  @keyframes lamp{0%{opacity:.95;transform:scale(1)}100%{opacity:0;transform:scale(2.6)}}
+}
+#hl .ring{transform-box:fill-box;transform-origin:center}
+
+/* ---------- floating chrome ---------- */
+#top,#bottom,.pop,#sheet{position:fixed}
+#top,#bottom{z-index:10}
+.chrome{background:var(--chrome);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--shadow);}
+#top{left:max(12px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));
+  display:flex;align-items:center;gap:10px;padding:6px 6px 6px 14px;pointer-events:none;background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+#top>*{pointer-events:auto}
+#brand{display:flex;align-items:center;gap:10px;padding:8px 14px 8px 12px;min-height:48px}
+#brand .lampdot{width:10px;height:10px;border-radius:50%;background:var(--lamp);box-shadow:0 0 0 3px var(--lamp-wash)}
+#brand b{font-family:var(--font-cond);font-weight:700;font-size:26px;line-height:1;letter-spacing:.01em;padding-top:3px}
+#brand span{font-size:14px;color:var(--muted);white-space:nowrap}
+#searchbox{position:relative;flex:1;max-width:440px;min-width:0}
+#sfield{position:relative;display:flex;align-items:center;gap:8px;padding:0 12px;min-height:48px}
+#q{flex:1;min-width:0;border:0;background:none;outline:none;font-size:16px;padding:12px 0;-webkit-user-select:text;user-select:text}
+#q::placeholder{color:var(--muted)}
+#results{position:absolute;left:0;right:0;top:56px;max-height:min(60vh,440px);overflow:auto;padding:6px;display:none}
+#results.open{display:block}
+.res{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;background:none;border:0;
+  border-radius:8px;padding:10px 10px;min-height:44px}
+.res:hover,.res.on{background:var(--hover)}
+.res b{font-weight:600;font-size:16px}
+.res small{color:var(--muted);font-size:13px;white-space:nowrap}
+.res .empty{color:var(--muted);padding:12px}
+.spacer{flex:1}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:48px;min-height:48px;padding:0 14px;border-radius:var(--r);border:1px solid var(--line);
+  background:var(--chrome);box-shadow:var(--shadow);font-size:15px;white-space:nowrap}
+.iconbtn:hover{background:var(--chrome-solid)}
+.iconbtn[aria-expanded="true"]{border-color:var(--lamp);color:var(--lamp-ink)}
+.iconbtn svg{width:20px;height:20px;flex:none}
+.iconbtn .lbl{display:inline}
+@media (max-width:900px){.iconbtn .lbl{display:none}.iconbtn{padding:0}#brand span{display:none}}
+@media (max-width:560px){#brand{padding:8px 10px}#brand b{font-size:22px}}
+
+/* ---------- popovers ---------- */
+.pop{position:fixed;z-index:20;right:max(12px,env(safe-area-inset-right));top:calc(max(12px,env(safe-area-inset-top)) + 58px);
+  width:min(340px,calc(100vw - 24px));padding:8px;display:none}
+.pop.open{display:block}
+.pop h2{font-size:13px;font-weight:600;color:var(--muted);margin:8px 10px 6px;letter-spacing:.02em}
+.toggle{display:flex;align-items:center;gap:12px;width:100%;padding:10px;min-height:48px;border:0;background:none;border-radius:8px;text-align:left}
+.toggle:hover{background:var(--hover)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;padding:0 10px 10px 44px;font-size:13px;color:var(--muted);align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:5px;color:var(--ink)}
+.legend i{width:16px;height:6px;border-radius:3px}
+.legend em{font-style:normal}
+.toggle .sw{width:22px;height:22px;border-radius:6px;flex:none;border:1px solid var(--line-strong)}
+.toggle .tx{flex:1}
+.toggle .tx b{display:block;font-weight:600;font-size:16px}
+.toggle .tx small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.toggle .knob{width:42px;height:26px;border-radius:13px;background:var(--line-strong);position:relative;flex:none;transition:background .15s}
+.toggle .knob::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--chrome-solid);box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+.toggle[aria-checked="true"] .knob{background:var(--lamp)}
+.toggle[aria-checked="true"] .knob::after{transform:translateX(16px)}
+
+/* ---------- tool box drawer ---------- */
+#toolbox{width:min(300px,calc(100vw - 24px));max-height:calc(100vh - 96px);overflow:auto}
+.links{display:grid;grid-template-columns:1fr;gap:4px;padding:0 4px 6px}
+.links a{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:56px;padding:8px 10px;border-radius:8px;color:inherit;text-decoration:none;border:1px solid transparent}
+.links a:hover{background:var(--hover);border-color:var(--line)}
+.links a b{font-weight:600;font-size:15px;line-height:1.2}
+.links a small{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note{color:var(--muted);font-size:13px;line-height:1.5;padding:10px 10px 6px;border-top:1px solid var(--line);margin-top:6px}
+.note a{color:var(--lamp-ink)}
+
+/* ---------- asset sheet ---------- */
+#sheet{z-index:15;right:max(12px,env(safe-area-inset-right));top:calc(max(12px,env(safe-area-inset-top)) + 64px);bottom:96px;width:360px;
+  display:flex;flex-direction:column;transform:translateX(calc(100% + 24px));transition:transform .22s ease-out;overflow:hidden}
+#sheet.open{transform:none}
+@media (prefers-reduced-motion:reduce){#sheet{transition:none}}
+#sheet header{display:flex;align-items:flex-start;gap:10px;padding:16px 10px 12px 18px;border-bottom:1px solid var(--line)}
+#sheet header .t{flex:1;min-width:0}
+#sheet h1{margin:0;font-family:var(--font-cond);font-weight:700;font-size:32px;line-height:1.05;letter-spacing:.01em;word-break:break-word;padding-top:3px}
+#sheet .kind{display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:14px;color:var(--muted)}
+#sheet .kind i{width:9px;height:9px;border-radius:50%;background:var(--lamp)}
+#sheet .close{min-width:44px;min-height:44px;border:0;background:none;border-radius:8px;display:flex;align-items:center;justify-content:center}
+#sheet .close:hover{background:var(--hover)}
+#sheet .body{overflow:auto;padding:8px 8px 14px;flex:1}
+#sheet h3{font-size:13px;font-weight:600;color:var(--muted);margin:12px 10px 4px;letter-spacing:.02em}
+.doc{display:flex;align-items:center;gap:12px;padding:10px;min-height:52px;border-radius:8px;color:inherit;text-decoration:none}
+.doc:hover{background:var(--hover)}
+.doc .ic{width:34px;height:34px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--hover);color:var(--muted)}
+.doc .ic svg{width:18px;height:18px}
+.doc .dt{flex:1;min-width:0}
+.doc .dt b{display:block;font-weight:600;font-size:15px;line-height:1.25;word-break:break-word}
+.doc .dt small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.doc.primary .ic{background:var(--lamp-wash);color:var(--lamp-ink)}
+.doc.missing{opacity:.75;cursor:default}
+.doc.missing:hover{background:none}
+.coords{font-size:13px;color:var(--muted);padding:0 10px 4px}
+@media (max-width:820px){
+  #sheet{left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));top:auto;bottom:max(8px,env(safe-area-inset-bottom));width:auto;max-height:58vh;
+    transform:translateY(calc(100% + 24px))}
+  #sheet.open{transform:none}
+}
+
+/* ---------- bottom bar: minimap + zoom ---------- */
+#bottom{left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));
+  display:flex;align-items:stretch;gap:10px;pointer-events:none;background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+#bottom>*{pointer-events:auto}
+#mini{flex:1;max-width:760px;height:64px;padding:6px 10px;position:relative;touch-action:none;cursor:crosshair}
+#mini svg{width:100%;height:100%;display:block}
+#mini line{stroke:var(--muted);stroke-width:14;stroke-linecap:round}
+#mini .vp{fill:var(--lamp-wash);stroke:var(--view);stroke-width:16;vector-effect:none}
+#mini .stn{fill:var(--p-station,var(--ink))}
+#guide{align-self:stretch;display:flex;align-items:center;font-size:12px;color:var(--muted);padding:8px 12px;max-width:220px;line-height:1.35}
+.zoom{display:flex;flex-direction:column;gap:6px}
+.zoom .iconbtn{min-height:0;height:calc((64px - 6px)/2);min-width:48px;padding:0}
+@media (max-width:820px){#guide{display:none}}
+@media (max-width:820px){body.sheet-open #bottom{display:none}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div id="stage" aria-label="Signalling map. Drag to pan, pinch or scroll to zoom, tap an asset for its drawings.">
+  <div id="world">
+    <svg id="map" class="m" xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 __Y0__ __W__ __H__" preserveAspectRatio="none">
+      <g id="L-base">__L_base__</g>
+      <g id="L-supply" class="lyr">__L_supply__</g>
+      <g id="L-approach" class="lyr" hidden>__L_approach__</g>
+      <g id="L-speed" class="lyr" hidden>__L_speed__</g>
+      <g id="L-tpws" class="lyr">__L_tpws__</g>
+      <g id="L-kp" class="lyr" hidden>__L_kp__</g>
+      <g id="pins" class="lyr"></g>
+      <g id="hl"></g>
+    </svg>
+  </div>
+</div>
+
+<div id="top" class="chrome">
+  <div id="brand" class="chrome"><i class="lampdot" aria-hidden="true"></i><b>Mantis</b><span>Sunshine region</span></div>
+  <div id="searchbox">
+    <div class="chrome" id="sfield">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="color:var(--muted)"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Find a signal, location, station or road" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" aria-label="Search the map" aria-controls="results">
+    </div>
+    <div id="results" class="chrome" role="listbox" aria-label="Search results"></div>
+  </div>
+  <div class="spacer"></div>
+  <button class="iconbtn" id="btnLayers" aria-expanded="false" aria-controls="layers">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg><span class="lbl">Layers</span></button>
+  <button class="iconbtn" id="btnTools" aria-expanded="false" aria-controls="toolbox">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2M3 12h18"/></svg><span class="lbl">Tool box</span></button>
+  <button class="iconbtn" id="btnTheme" aria-label="Switch to dark mode">
+    <svg id="icoMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></svg>
+    <svg id="icoSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" style="display:none"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </button>
+</div>
+
+<div id="layers" class="chrome pop" role="dialog" aria-label="Map layers">
+  <h2>Show on map</h2>
+  <div id="layerList"></div>
+</div>
+
+<div id="toolbox" class="chrome pop" role="dialog" aria-label="Tool box">
+  <h2>Tool box</h2>
+  <div class="links" id="tbDocs"></div>
+  <div class="note">Mantis is a guide only. Refer to official documentation, drawings and plans.<br>
+    Questions or feedback: <a id="mailLink" href="#">email the Mantis team</a>.<br>Rebuilt from Mantis v3.1.3.</div>
+</div>
+
+<aside id="sheet" class="chrome" aria-label="Asset details" aria-hidden="true">
+  <header>
+    <div class="t"><h1 id="sTitle"></h1><div class="kind"><i aria-hidden="true"></i><span id="sKind"></span></div></div>
+    <button class="close" id="sClose" aria-label="Close details">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </header>
+  <div class="body" id="sBody"></div>
+</aside>
+
+<div id="bottom" class="chrome">
+  <div id="mini" class="chrome" aria-label="Overview map. Tap to jump there.">
+    <svg id="miniSvg" viewBox="0 __Y0__ __W__ __H__" preserveAspectRatio="none"><g id="miniLines"></g><rect class="vp" id="vp"/></svg>
+  </div>
+  <div id="guide" class="chrome">Guide only. Refer to official documentation, drawings and plans.</div>
+  <div class="spacer"></div>
+  <div class="zoom">
+    <button class="iconbtn" id="zIn" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="iconbtn" id="zOut" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+  </div>
+  <button class="iconbtn" id="zFit" aria-label="Show whole region" style="height:64px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+</div>
+<div class="sr" aria-live="polite" id="live"></div>
+
+<script>
+const DATA = __DATA__;
+</script>
+<script>
+(() => {
+"use strict";
+const W = DATA.w, Y0 = DATA.top, H = DATA.bot - DATA.top;
+const $ = s => document.querySelector(s);
+const stage = $("#stage"), world = $("#world");
+const store = {
+  get(k, d){ try { const v = localStorage.getItem("mantis." + k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem("mantis." + k, JSON.stringify(v)); } catch(e){} }
+};
+
+/* ================= theme ================= */
+const root = document.documentElement;
+function systemDark(){ return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches; }
+function currentTheme(){ return root.dataset.theme || (systemDark() ? "dark" : "light"); }
+function applyTheme(t){
+  root.dataset.theme = t;
+  $("#icoMoon").style.display = t === "dark" ? "none" : "";
+  $("#icoSun").style.display = t === "dark" ? "" : "none";
+  $("#btnTheme").setAttribute("aria-label", t === "dark" ? "Switch to light mode" : "Switch to dark mode");
+}
+applyTheme(store.get("theme", currentTheme()));
+$("#btnTheme").onclick = () => { const t = currentTheme() === "dark" ? "light" : "dark"; applyTheme(t); store.set("theme", t); };
+
+/* ================= view state ================= */
+let s = 1, tx = 0, ty = 0, dirty = true, minS = 0.02, maxS = 6;
+function vw(){ return stage.clientWidth; }
+function vh(){ return stage.clientHeight; }
+function fitScale(){ return Math.min(vw() / W, (vh() - 150) / H); }
+function clamp(){
+  s = Math.max(minS, Math.min(maxS, s));
+  const mw = W * s, mh = H * s, pad = 80;
+  const minX = Math.min(pad, vw() - mw - pad), maxX = Math.max(vw() - pad - mw, pad);
+  // keep at least part of the map on screen
+  tx = Math.max(Math.min(tx, vw() - pad), pad - mw);
+  ty = Math.max(Math.min(ty, vh() - pad), pad - mh);
+}
+/* The map is drawn into an svg only a little larger than the screen (never one giant image, which
+   is what crashes tablets). While you drag, fling or pinch, the last drawing is moved/stretched on
+   the graphics chip (cheap, smooth). Once things settle - or the view runs off the drawn area -
+   it is redrawn sharp at the new position. */
+const OV = 0.6, svgEl = document.getElementById("map");
+let cv = { s: 1, tx: 0, ty: 0 }, box = { ox: 0, oy: 0, w: 1, h: 1 }, lastCommit = 0, flying = false;
+function layoutSvg(){
+  box = { ox: -vw() * OV, oy: -vh() * OV, w: vw() * (1 + 2 * OV), h: vh() * (1 + 2 * OV) };
+  svgEl.setAttribute("width", Math.round(box.w)); svgEl.setAttribute("height", Math.round(box.h));
+  world.style.left = box.ox + "px"; world.style.top = box.oy + "px";
+}
+// only the grid cells near the drawn area are switched on, so each redraw handles a small slice of the map
+const CELL = __CELL__, CELLS = [...document.querySelectorAll("#map .cell")].map(el => {
+  const [cx, cy] = el.dataset.c.split(",").map(Number); return { el, cx, cy, on: true };
+});
+function cull(x0, y0, x1, y1){
+  const m = CELL * 0.6;
+  for (const c of CELLS){
+    const X0 = c.cx * CELL, Y = c.cy * CELL + Y0;
+    const on = X0 + CELL > x0 - m && X0 < x1 + m && Y + CELL > y0 - m && Y < y1 + m;
+    if (on !== c.on){ c.on = on; c.el.style.display = on ? "" : "none"; }
+  }
+}
+function commit(){
+  cv = { s, tx, ty };
+  const x = (box.ox - tx) / s, y = (box.oy - ty) / s + Y0;
+  cull(x, y, x + box.w / s, y + box.h / s);
+  // detail that would be smaller than a pixel or two isn't drawn at all (faster, and less noise)
+  const lod = s < 0.32 ? 0 : s < 0.8 ? 1 : 2;
+  if (lod !== svgEl.__lod){ svgEl.__lod = lod; svgEl.classList.toggle("lod0", lod === 0); svgEl.classList.toggle("lod1", lod === 1); }
+  svgEl.setAttribute("viewBox", `${x} ${y} ${box.w / s} ${box.h / s}`);
+  world.style.transform = "translate3d(0,0,0)";
+  lastCommit = performance.now();
+}
+function render(){
+  if (!dirty) return;
+  dirty = false;
+  let k = s / cv.s;
+  let X = (box.ox - cv.tx) * k + tx - box.ox, Yt = (box.oy - cv.ty) * k + ty - box.oy;
+  // drawn area on screen; redraw early if the view has run past it or zoomed a long way
+  const L = box.ox + X, T = box.oy + Yt, R = L + box.w * k, B = T + box.h * k;
+  const uncovered = L > 1 || T > 1 || R < vw() - 1 || B < vh() - 1;
+  if ((uncovered || k > 3.2) && performance.now() - lastCommit > 220){
+    commit(); k = 1; X = 0; Yt = 0;
+  }
+  world.style.transform = `translate3d(${X}px,${Yt}px,0) scale(${k})`;
+  updateViewport();
+}
+function loop(){ render(); requestAnimationFrame(loop); }
+function mark(){ dirty = true; }
+let settleTimer = 0;
+function moving(){
+  world.classList.add("moving");
+  clearTimeout(settleTimer);
+  settleTimer = setTimeout(settle, 120);
+}
+function settle(){
+  if (gesture || inertia || flying){ moving(); return; }
+  world.classList.remove("moving");
+  if (cv.s !== s || cv.tx !== tx || cv.ty !== ty){ commit(); mark(); }
+}
+function zoomAt(f, cx, cy){
+  const ns = Math.max(minS, Math.min(maxS, s * f));
+  const k = ns / s;
+  tx = cx - (cx - tx) * k; ty = cy - (cy - ty) * k; s = ns;
+  clamp(); mark(); moving();
+}
+function toMap(px, py){ return [(px - tx) / s, (py - ty) / s + Y0]; }
+function fitAll(animate){
+  const fs = fitScale();
+  const target = { s: fs, tx: (vw() - W * fs) / 2, ty: (vh() - H * fs) / 2 };
+  animate ? fly(target) : (s = target.s, tx = target.tx, ty = target.ty, mark());
+}
+function sheetOffset(){
+  const open = $("#sheet").classList.contains("open");
+  return open && vw() > 820 ? 384 : 0;
+}
+function viewFor(x0, y0, x1, y1, maxScale){
+  const avW = vw() - sheetOffset(), avH = vh() - (vw() > 820 ? 170 : 260);
+  let ns = Math.min(avW / Math.max(x1 - x0, 1), avH / Math.max(y1 - y0, 1)) * 0.6;
+  ns = Math.max(minS, Math.min(maxScale || 2.2, ns));
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2 - Y0;
+  const yCentre = vw() > 820 ? vh() / 2 + 20 : (vh() * 0.36);
+  return { s: ns, tx: avW / 2 - cx * ns, ty: yCentre - cy * ns };
+}
+const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+let flight = 0;
+function fly(t){
+  cancelAnimationFrame(flight); inertia = null;
+  if (reduceMotion){ s = t.s; tx = t.tx; ty = t.ty; clamp(); mark(); moving(); return; }
+  flying = true;
+  const a = { s, tx, ty }, start = performance.now(), dur = 520;
+  const ease = u => 1 - Math.pow(1 - u, 3);
+  // interpolate in screen-centre space so zoom feels natural
+  const ca = [(vw()/2 - a.tx)/a.s, (vh()/2 - a.ty)/a.s], cb = [(vw()/2 - t.tx)/t.s, (vh()/2 - t.ty)/t.s];
+  const step = now => {
+    const u = Math.min(1, (now - start) / dur), e = ease(u);
+    s = Math.exp(Math.log(a.s) + (Math.log(t.s) - Math.log(a.s)) * e);
+    const cx = ca[0] + (cb[0] - ca[0]) * e, cy = ca[1] + (cb[1] - ca[1]) * e;
+    tx = vw()/2 - cx * s; ty = vh()/2 - cy * s;
+    mark(); moving();
+    if (u < 1) flight = requestAnimationFrame(step); else { s = t.s; tx = t.tx; ty = t.ty; clamp(); mark(); flying = false; moving(); }
+  };
+  flight = requestAnimationFrame(step);
+}
+
+/* ================= gestures ================= */
+const pts = new Map();
+let gesture = null, inertia = null, lastTap = { t: 0, x: 0, y: 0 };
+stage.addEventListener("pointerdown", e => {
+  if (e.button !== undefined && e.button > 0) return;
+  stage.setPointerCapture(e.pointerId);
+  pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  cancelAnimationFrame(flight); inertia = null; flying = false;
+  closePops();
+  if (pts.size === 1){
+    gesture = { mode: "pan", sx: e.clientX, sy: e.clientY, t0: performance.now(), moved: 0, multi: false,
+      samples: [{ x: e.clientX, y: e.clientY, t: performance.now() }] };
+  } else if (pts.size === 2){
+    const [p, q] = [...pts.values()];
+    gesture = { mode: "pinch", d: Math.hypot(p.x - q.x, p.y - q.y), mx: (p.x + q.x) / 2, my: (p.y + q.y) / 2, multi: true, moved: 99 };
+  }
+});
+stage.addEventListener("pointermove", e => {
+  if (!pts.has(e.pointerId) || !gesture) return;
+  const prev = pts.get(e.pointerId);
+  pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (gesture.mode === "pan" && pts.size === 1){
+    const dx = e.clientX - prev.x, dy = e.clientY - prev.y;
+    gesture.moved += Math.abs(dx) + Math.abs(dy);
+    if (gesture.moved > 6) stage.classList.add("dragging");
+    tx += dx; ty += dy; clamp(); mark(); moving();
+    const now = performance.now();
+    gesture.samples.push({ x: e.clientX, y: e.clientY, t: now });
+    while (gesture.samples.length > 2 && now - gesture.samples[0].t > 100) gesture.samples.shift();
+  } else if (pts.size === 2){
+    const [p, q] = [...pts.values()];
+    const d = Math.hypot(p.x - q.x, p.y - q.y), mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2;
+    if (gesture.mode !== "pinch") gesture = { mode: "pinch", d, mx, my, multi: true, moved: 99 };
+    tx += mx - gesture.mx; ty += my - gesture.my;
+    zoomAt(d / gesture.d, mx, my);
+    gesture.d = d; gesture.mx = mx; gesture.my = my;
+  }
+});
+function endPointer(e){
+  if (!pts.has(e.pointerId)) return;
+  pts.delete(e.pointerId);
+  stage.classList.remove("dragging");
+  if (!gesture) return;
+  if (gesture.mode === "pinch"){
+    if (pts.size === 1){ const [p] = [...pts.values()]; gesture = { mode: "pan", sx: p.x, sy: p.y, t0: performance.now(), moved: 99, multi: true, samples: [{ x: p.x, y: p.y, t: performance.now() }] }; }
+    else gesture = null;
+    return;
+  }
+  if (pts.size > 0) return;
+  const g = gesture; gesture = null;
+  const dt = performance.now() - g.t0;
+  if (!g.multi && g.moved < 8 && dt < 400){ onTap(e.clientX, e.clientY); return; }
+  const now = performance.now();
+  const recent = g.samples.filter(p => now - p.t < 100);
+  if (recent.length >= 2 && now - recent[recent.length - 1].t < 80){
+    const a = recent[0], b = recent[recent.length - 1], span = Math.max(b.t - a.t, 8);
+    let vx = (b.x - a.x) / span, vy = (b.y - a.y) / span;
+    const sp = Math.hypot(vx, vy), cap = 7;
+    if (sp > cap){ vx *= cap / sp; vy *= cap / sp; }
+    if (sp > 0.08){ startInertia(vx, vy); return; }
+  }
+  moving();
+}
+stage.addEventListener("pointerup", endPointer);
+stage.addEventListener("pointercancel", endPointer);
+// velocity in px per ms; glides out like a native iPad scroll view
+const GLIDE = 0.9974;
+function startInertia(vx, vy){
+  inertia = { vx, vy, t: performance.now() };
+  const step = now => {
+    if (!inertia) return;
+    const dt = Math.min(34, now - inertia.t); inertia.t = now;
+    const wantX = tx + inertia.vx * dt, wantY = ty + inertia.vy * dt;
+    tx = wantX; ty = wantY; clamp();
+    if (Math.abs(tx - wantX) > .5) inertia.vx = 0;     // hit the edge: stop that direction
+    if (Math.abs(ty - wantY) > .5) inertia.vy = 0;
+    const f = Math.pow(GLIDE, dt);
+    inertia.vx *= f; inertia.vy *= f;
+    mark(); moving();
+    if (Math.hypot(inertia.vx, inertia.vy) > 0.015) requestAnimationFrame(step); else { inertia = null; moving(); }
+  };
+  requestAnimationFrame(step);
+}
+stage.addEventListener("wheel", e => {
+  e.preventDefault();
+  cancelAnimationFrame(flight); inertia = null;
+  const pixel = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? vh() : 1;
+  if (e.ctrlKey){ zoomAt(Math.exp(-e.deltaY * pixel * 0.01), e.clientX, e.clientY); return; }
+  if (Math.abs(e.deltaX) > 0 && Math.abs(e.deltaY) < 50 && e.deltaMode === 0 && !Number.isInteger(e.deltaY / 100)){
+    tx -= e.deltaX * pixel; ty -= e.deltaY * pixel; clamp(); mark(); moving(); return;
+  }
+  zoomAt(Math.exp(-e.deltaY * pixel * 0.0018), e.clientX, e.clientY);
+}, { passive: false });
+["gesturestart", "gesturechange"].forEach(n => document.addEventListener(n, e => e.preventDefault()));
+$("#zIn").onclick = () => fly(scaledAround(1.8));
+$("#zOut").onclick = () => fly(scaledAround(1 / 1.8));
+$("#zFit").onclick = () => fitAll(true);
+function scaledAround(f){
+  const ns = Math.max(minS, Math.min(maxS, s * f)), cx = vw() / 2, cy = vh() / 2;
+  return { s: ns, tx: cx - (cx - tx) * ns / s, ty: cy - (cy - ty) * ns / s };
+}
+window.addEventListener("resize", () => { minS = fitScale() * 0.85; clamp(); layoutSvg(); commit(); mark(); });
+
+/* ================= assets & links ================= */
+const LINKS = DATA.links.map((l, i) => Object.assign(l, { i,
+  cx: (l.r[0] + l.r[2]) / 2, cy: (l.r[1] + l.r[3]) / 2, area: (l.r[2] - l.r[0]) * (l.r[3] - l.r[1]) }));
+const BAND_TYPES = ["Signalling arrangement plan", "Bonding plan", "Control tables"];
+const isBand = l => BAND_TYPES.includes(l.t);
+const NAMES = DATA.names || {};
+const ASSETS = new Map();
+for (const l of LINKS){
+  if (!l.a || l.x !== undefined) continue;
+  if (!ASSETS.has(l.a)) ASSETS.set(l.a, { id: l.a, links: [], types: {}, r: l.r.slice() });
+  const a = ASSETS.get(l.a);
+  a.links.push(l); a.types[l.t] = (a.types[l.t] || 0) + 1;
+  a.r = [Math.min(a.r[0], l.r[0]), Math.min(a.r[1], l.r[1]), Math.max(a.r[2], l.r[2]), Math.max(a.r[3], l.r[3])];
+}
+const TYPE_ORDER = ["Signal", "Location case", "UPS", "Signal equipment room", "Points", "Level crossing", "Track circuit", "TPWS", "Equipment", "Axle counter overview"];
+function assetType(a){ for (const t of TYPE_ORDER) if (a.types[t]) return t; return Object.keys(a.types)[0]; }
+function primaryLink(a){
+  const t = assetType(a);
+  return a.links.find(l => l.t === t && !l.m) || a.links[0];
+}
+// where to put the highlight: the asset's name only (e.g. just "MW291"), else the words under the link
+function markRect(l){
+  if (l.a && NAMES[l.a]) return NAMES[l.a];
+  return l.h || l.r;
+}
+for (const a of ASSETS.values()) a.mark = NAMES[a.id] || markRect(primaryLink(a));
+const PINS = LINKS.filter(l => l.t === "Directions");
+
+// pins
+(function drawPins(){
+  const g = $("#pins"); let h = "";
+  for (const p of PINS){
+    const x = p.cx, y = p.cy;
+    h += `<g data-i="${p.i}"><path d="M${x} ${y+6}c-4.2-5.2-6.3-8.6-6.3-11.3a6.3 6.3 0 1112.6 0c0 2.7-2.1 6.1-6.3 11.3z"/><circle cx="${x}" cy="${y-5.4}" r="2.3"/></g>`;
+  }
+  g.innerHTML = h;
+})();
+
+function dist2rect(x, y, r){
+  const dx = Math.max(r[0] - x, 0, x - r[2]), dy = Math.max(r[1] - y, 0, y - r[3]);
+  return Math.hypot(dx, dy);
+}
+// Tap targets: every asset's written name (so tapping "MW291" always opens MW291), plus every link
+// from the PDF (symbols, indicators, TPWS arrows, tags). Drawing bands are reached from the panel instead.
+const TARGETS = [];
+for (const a of ASSETS.values()){
+  if (NAMES[a.id]) { const r = NAMES[a.id]; TARGETS.push({ r: [r[0] - 1.5, r[1] - 1.5, r[2] + 1.5, r[3] + 1.5], l: primaryLink(a), name: 1 }); }
+}
+for (const l of LINKS){
+  if (isBand(l) || l.t === "Directions" || l.x !== undefined) continue;
+  TARGETS.push({ r: l.r, l, name: 0 });
+}
+function hitTest(mx, my){
+  const tol = 18 / s;
+  let best = null, key = null;
+  const pinsOn = !$("#pins").hasAttribute("hidden");
+  const consider = (r, l, name) => {
+    const d = dist2rect(mx, my, r);
+    if (d > tol) return;
+    const area = (r[2] - r[0]) * (r[3] - r[1]);
+    // inside beats near; when inside several, the smallest (most specific) target wins
+    const k = d > 0 ? [1, d, 0] : [0, area, name ? 0 : 1];
+    if (!key || k[0] < key[0] || (k[0] === key[0] && (k[1] < key[1] || (k[1] === key[1] && k[2] < key[2])))){ key = k; best = l; }
+  };
+  for (const t of TARGETS) consider(t.r, t.l, t.name);
+  if (pinsOn) for (const p of PINS) consider([p.cx - 7, p.cy - 12, p.cx + 7, p.cy + 6], p, 1);
+  return best;
+}
+function onTap(px, py){
+  const [mx, my] = toMap(px, py);
+  const now = performance.now();
+  const dbl = now - lastTap.t < 320 && Math.hypot(px - lastTap.x, py - lastTap.y) < 30;
+  lastTap = { t: now, x: px, y: py };
+  if (dbl){ fly(scaledAround2(2.2, px, py)); return; }
+  const hit = hitTest(mx, my);
+  if (hit && s > fitScale() * 2.2) { select(hit); return; }
+  if (s <= fitScale() * 2.2){ fly(scaledAround2(Math.max(4, 0.35 / s), px, py)); return; }
+  closeSheet();
+}
+function scaledAround2(f, cx, cy){
+  const ns = Math.max(minS, Math.min(maxS, s * f));
+  return { s: ns, tx: cx - (cx - tx) * ns / s, ty: cy - (cy - ty) * ns / s };
+}
+
+/* ================= highlight ================= */
+function highlight(r){
+  const pad = 4, x = r[0] - pad, y = r[1] - pad, w = r[2] - r[0] + pad * 2, h = r[3] - r[1] + pad * 2;
+  $("#hl").innerHTML = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4"/><rect class="ring" x="${x}" y="${y}" width="${w}" height="${h}" rx="4"/>`;
+  const ring = $("#hl .ring");
+  requestAnimationFrame(() => ring && ring.classList.add("go"));
+}
+
+/* ================= details sheet ================= */
+const ICON = {
+  doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0113 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg>'
+};
+function esc(t){ return String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function fileTitle(l){
+  let f = decodeURIComponent((l.f || "").replace(/\+/g, " "));
+  try { f = decodeURIComponent(f); } catch(e){}
+  return f.replace(/\.pdf$/i, "") || l.l || "Open link";
+}
+function docRow(l, kind, primary){
+  return `<a class="doc${primary ? " primary" : ""}" href="${esc(l.u)}" target="_blank" rel="noopener">
+    <span class="ic" aria-hidden="true">${ICON[kind || "doc"]}</span>
+    <span class="dt"><b>${esc(fileTitle(l))}</b><small>${esc(l.t)}</small></span></a>`;
+}
+function pinRows(p){
+  let h = "";
+  if (p.g){
+    h += `<a class="doc primary" href="https://maps.apple.com/?daddr=${p.g[0]},${p.g[1]}" target="_blank" rel="noopener"><span class="ic" aria-hidden="true">${ICON.pin}</span><span class="dt"><b>Directions in Apple Maps</b><small>${p.g[0].toFixed(5)}, ${p.g[1].toFixed(5)}</small></span></a>`;
+  }
+  h += `<a class="doc" href="${esc(p.u)}" target="_blank" rel="noopener"><span class="ic" aria-hidden="true">${ICON.pin}</span><span class="dt"><b>Directions in Google Maps</b><small>${esc(p.p || "Saved route")}</small></span></a>`;
+  return h;
+}
+function nearestPin(r, maxD){
+  let best = null, bd = maxD;
+  for (const p of PINS){ const d = dist2rect(p.cx, p.cy, r); if (d < bd){ bd = d; best = p; } }
+  return best;
+}
+function fileKey(l){ try { return decodeURIComponent(decodeURIComponent(l.u.split("?")[0])).split("/").pop().toLowerCase(); } catch(e){ return l.u.toLowerCase(); } }
+function uniqueDocs(list){
+  // the same drawing is sometimes linked twice (different case or folder); keep one, preferring ~Assets
+  const by = new Map();
+  for (const l of list){
+    if (l.m) continue;
+    const k = fileKey(l), cur = by.get(k);
+    const rank = x => (x.u.includes("/~Assets/") ? 0 : 1) + (x.u.includes("/sites/SCMantis/") ? 0 : 2);
+    if (!cur || rank(l) < rank(cur)) by.set(k, l);
+  }
+  return [...by.values()];
+}
+function areaDrawings(x, y){
+  const best = {};
+  for (const l of LINKS){
+    if (!isBand(l) || x < l.r[0] - 2 || x > l.r[2] + 2) continue;
+    const dy = l.cy - y, score = Math.abs(dy) + (dy < 0 ? 400 : 0);
+    if (!best[l.t] || score < best[l.t].score) best[l.t] = { l, score };
+  }
+  const rows = BAND_TYPES.filter(t => best[t] && best[t].score < 900).map(t => best[t].l);
+  return rows.length ? `<h3>Drawings for this area</h3>` + rows.map(l => docRow(l)).join("") : "";
+}
+function missingRow(l){
+  return `<div class="doc missing"><span class="ic" aria-hidden="true">${ICON.doc}</span><span class="dt"><b>Drawing not linked</b><small>The Mantis link here has no file name. Add it in the asset list.</small></span></div>`;
+}
+let selected = null;
+function select(l, fromSearch){
+  selected = l;
+  let title, kind, body = "", r = l.r;
+  if (l.t === "Directions"){
+    let near = null, nd = 220;
+    for (const a of ASSETS.values()){
+      if (!["Location case", "UPS", "Signal equipment room", "Level crossing"].includes(assetType(a))) continue;
+      const d = dist2rect(l.cx, l.cy, a.r); if (d < nd){ nd = d; near = a; }
+    }
+    title = l.p ? l.p.split(",")[0].replace(/\+/g, " ") : near ? near.id : "Access point";
+    kind = near && !l.p ? `Directions to ${assetType(near).toLowerCase()}` : "Directions";
+    body = pinRows(l);
+    r = [l.cx - 7, l.cy - 12, l.cx + 7, l.cy + 6];
+  } else if (l.a && ASSETS.has(l.a)){
+    const a = ASSETS.get(l.a);
+    title = a.id; kind = assetType(a);
+    const own = uniqueDocs(a.links);
+    own.sort((x, y) => TYPE_ORDER.indexOf(x.t) - TYPE_ORDER.indexOf(y.t));
+    const seen = new Set(own.map(fileKey));
+    body += `<h3>Drawings</h3>` + own.map((x, k) => docRow(x, "doc", k === 0)).join("");
+    if (a.links.some(x => x.m)) body += missingRow();
+    // documents filed in this location's folder
+    const folder = uniqueDocs(LINKS.filter(x => !isBand(x) && x.u.toUpperCase().includes(`/DRAWINGS/${a.id}/`))).filter(x => !seen.has(fileKey(x)) && seen.add(fileKey(x)));
+    if (folder.length) body += `<h3>In this location's folder</h3>` + folder.map(x => docRow(x)).join("");
+    // another link sat on exactly the same spot in the PDF; show it rather than lose it
+    const ids = new Set(a.links.map(x => x.i));
+    const also = uniqueDocs(LINKS.filter(x => x.x !== undefined && ids.has(x.x))).filter(x => !seen.has(fileKey(x)));
+    if (also.length) body += `<h3>Also linked here</h3>` + also.map(x => docRow(x)).join("");
+    if (["Location case", "UPS", "Signal equipment room", "Level crossing"].includes(kind)){
+      const p = nearestPin(a.r, 170);
+      if (p) body += `<h3>Getting there</h3>` + pinRows(p);
+    }
+    r = a.mark;
+    body += areaDrawings((r[0] + r[2]) / 2, (r[1] + r[3]) / 2);
+  } else {
+    title = l.l || fileTitle(l);
+    kind = l.t;
+    body = `<h3>${l.u.startsWith("mailto:") ? "Email" : "Drawing"}</h3>` + (l.m ? missingRow(l) : docRow(l, l.t === "Link" ? "link" : "doc", true));
+    if (l.l && l.l !== fileTitle(l)) body += `<div class="coords">Labelled ${esc(l.l)} on the map</div>`;
+    r = markRect(l);
+    body += areaDrawings((r[0] + r[2]) / 2, (r[1] + r[3]) / 2);
+  }
+  $("#sTitle").textContent = title;
+  $("#sKind").textContent = kind;
+  announce(l, title, kind);
+  $("#sBody").innerHTML = body;
+  openSheet();
+  highlight(r);
+  $("#live").textContent = `${title}, ${kind}`;
+  if (fromSearch) fly(viewFor(r[0], r[1], r[2], r[3], 1.6));
+  else {
+    // nudge the map if the sheet would cover the selection
+    const sx = r[2] * s + tx, sy = (r[3] - Y0) * s + ty;
+    if (vw() > 820 && sx > vw() - 400) fly({ s, tx: tx - (sx - (vw() - 440)), ty });
+    else if (vw() <= 820 && sy > vh() * 0.4) fly({ s, tx, ty: ty - (sy - vh() * 0.32) });
+  }
+}
+function openSheet(){ const el = $("#sheet"); el.classList.add("open"); el.setAttribute("aria-hidden", "false"); document.body.classList.add("sheet-open"); }
+function closeSheet(){ const el = $("#sheet"); el.classList.remove("open"); el.setAttribute("aria-hidden", "true"); document.body.classList.remove("sheet-open"); $("#hl").innerHTML = ""; selected = null; }
+$("#sClose").onclick = closeSheet;
+
+/* ================= search ================= */
+const INDEX = [];
+for (const a of ASSETS.values()) INDEX.push({ k: a.id, label: a.id, kind: assetType(a), r: a.mark, asset: a });
+const seenLabel = new Set(ASSETS.keys());
+for (const l of LINKS){
+  if (!l.a && l.l && l.t !== "Directions" && !isBand(l) && !seenLabel.has(l.l.toUpperCase())){
+    seenLabel.add(l.l.toUpperCase());
+    INDEX.push({ k: l.l.toUpperCase(), label: l.l, kind: l.t, r: l.r, link: l });
+  }
+}
+for (const t of DATA.labels){
+  const key = t[0].toUpperCase().replace(/\s+/g, " ");
+  if (seenLabel.has(key) || /^\d+(\.\d+)?\s*(kp|km\/h)?$/i.test(t[0]) || /ARRANGEMENT|BONDING PLANS|CONTROL TABLES|^\s*PLANS\s*$/i.test(t[0])) continue;
+  seenLabel.add(key);
+  INDEX.push({ k: key, label: t[0], kind: /STATION|PLATFORM/i.test(t[0]) ? "Station" : / (Rd|St|Lane|Bvd)\b|Creek|River|PX/i.test(t[0]) ? "Place" : "Label", r: [t[1], t[2], t[3], t[4]] });
+}
+// station names sit on the line above a "STATION" label
+for (const st of DATA.labels.filter(t => /^STATION$/i.test(t[0].trim()))){
+  let best = null, bd = 40;
+  for (const e of INDEX){
+    if (e.asset || e.link || e.kind === "Station") continue;
+    const dy = st[2] - e.r[3], ox = Math.min(st[3], e.r[2]) - Math.max(st[1], e.r[0]);
+    if (dy > -4 && dy < bd && ox > 0){ bd = dy; best = e; }
+  }
+  if (best){ best.kind = "Station"; best.r = [Math.min(best.r[0], st[1]), best.r[1], Math.max(best.r[2], st[3]), st[4]]; }
+}
+let resItems = [], resOn = -1;
+function search(q){
+  q = q.trim().toUpperCase().replace(/\s+/g, " ");
+  if (!q) return [];
+  const out = [];
+  for (const e of INDEX){
+    const i = e.k.indexOf(q);
+    if (i < 0) continue;
+    const rank = (e.k === q ? 0 : i === 0 ? 1 : 2) * 10 + (e.asset ? 0 : e.kind === "Station" ? 1 : 3);
+    out.push([rank, e.k.length, e]);
+  }
+  out.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  return out.slice(0, 12).map(x => x[2]);
+}
+function showResults(){
+  const box = $("#results");
+  const q = $("#q").value;
+  if (!q.trim()){ box.classList.remove("open"); return; }
+  resItems = search(q); resOn = resItems.length ? 0 : -1;
+  box.innerHTML = resItems.length ? resItems.map((e, k) =>
+    `<button class="res${k === resOn ? " on" : ""}" role="option" data-k="${k}"><b>${esc(e.label)}</b><small>${esc(e.kind)}</small></button>`).join("")
+    : `<div class="res empty">Nothing on the map matches “${esc(q.trim())}”. Try a signal number like MW291 or a station name.</div>`;
+  box.classList.add("open");
+}
+function choose(e){
+  $("#results").classList.remove("open");
+  $("#q").blur();
+  if (e.asset) select(primaryLink(e.asset), true);
+  else if (e.link) select(e.link, true);
+  else { closeSheet(); highlight(e.r); fly(viewFor(e.r[0], e.r[1], e.r[2], e.r[3], 1.2)); }
+}
+$("#q").addEventListener("input", showResults);
+$("#q").addEventListener("focus", () => { closePops(); if ($("#q").value.trim()) showResults(); });
+$("#q").addEventListener("keydown", e => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp"){
+    e.preventDefault();
+    if (!resItems.length) return;
+    resOn = (resOn + (e.key === "ArrowDown" ? 1 : -1) + resItems.length) % resItems.length;
+    [...$("#results").querySelectorAll(".res")].forEach((b, k) => b.classList.toggle("on", k === resOn));
+  } else if (e.key === "Enter"){ if (resItems[resOn]) choose(resItems[resOn]); }
+  else if (e.key === "Escape"){ $("#results").classList.remove("open"); $("#q").blur(); }
+});
+$("#results").addEventListener("click", e => { const b = e.target.closest(".res[data-k]"); if (b) choose(resItems[+b.dataset.k]); });
+
+/* ================= layers ================= */
+const LAYERS = [
+  { id: "tpws", name: "TPWS", note: "Train protection loops", sw: "var(--tpws-sw)", on: true },
+  { id: "kp", name: "Kilometre posts", note: "KP chainage at each asset", sw: "var(--kp-sw)", on: false },
+  { id: "speed", name: "Speed boards", note: "Permanent speed limits", sw: "var(--speed-sw)", on: false },
+  { id: "approach", name: "Crossing approaches", note: "Level crossing approach and holding zones", sw: "var(--appr-sw)", on: false },
+  { id: "supply", name: "Asset supply", note: "Which location feeds each asset", sw: "var(--supply-sw)", on: true },
+  { id: "pins", name: "Directions pins", note: "Tap a pin for driving directions", sw: "var(--lamp)", on: true },
+];
+const layerState = store.get("layers", {});
+function setLayer(L, on){
+  L.on = on;
+  const g = L.id === "pins" ? $("#pins") : $("#L-" + L.id);
+  on ? g.removeAttribute("hidden") : g.setAttribute("hidden", "");
+  const b = document.querySelector(`.toggle[data-id="${L.id}"]`);
+  if (b) b.setAttribute("aria-checked", on ? "true" : "false");
+  layerState[L.id] = on; store.set("layers", layerState);
+}
+$("#layerList").innerHTML = LAYERS.map(L => `<button class="toggle" role="switch" data-id="${L.id}" aria-checked="false">
+  <span class="sw" style="background:${L.sw}"></span><span class="tx"><b>${L.name}</b><small>${L.note}</small></span><span class="knob" aria-hidden="true"></span></button>` +
+  (L.id === "speed" ? `<div class="legend" aria-label="Speed colours">${DATA.legend.map(g => `<span><i style="background:${g.c}"></i>${g.v}</span>`).join("")}<em>km/h</em></div>` : "")).join("");
+LAYERS.forEach(L => setLayer(L, layerState[L.id] !== undefined ? layerState[L.id] : L.on));
+$("#layerList").addEventListener("click", e => {
+  const b = e.target.closest(".toggle"); if (!b) return;
+  const L = LAYERS.find(x => x.id === b.dataset.id); setLayer(L, !L.on);
+});
+
+/* ================= popovers ================= */
+function togglePop(btn, pop){
+  const open = !pop.classList.contains("open");
+  closePops();
+  if (open){ pop.classList.add("open"); btn.setAttribute("aria-expanded", "true"); }
+}
+function closePops(){
+  ["#layers", "#toolbox"].forEach(p => $(p).classList.remove("open"));
+  ["#btnLayers", "#btnTools"].forEach(b => $(b).setAttribute("aria-expanded", "false"));
+  $("#results").classList.remove("open");
+}
+$("#btnLayers").onclick = () => togglePop($("#btnLayers"), $("#layers"));
+$("#btnTools").onclick = () => togglePop($("#btnTools"), $("#toolbox"));
+document.addEventListener("keydown", e => { if (e.key === "Escape"){ closePops(); closeSheet(); } });
+
+/* ================= tool box ================= */
+(function toolbox(){
+  // Only these stay in the tool box. Add a name here to bring another one back.
+  const KEEP = [["CBI Logic", "CBI logic"], ["Signal Power Dist", "Signal power distribution"], ["Comms Network", "Comms network"]];
+  let docs = "";
+  for (const [match, name] of KEEP){
+    const c = DATA.chrome.find(c => c.l.trim().startsWith(match));
+    if (c) docs += `<a href="${esc(c.u)}" target="_blank" rel="noopener"><b>${esc(name)}</b><small>Opens in SharePoint</small></a>`;
+  }
+  const mail = DATA.chrome.find(c => c.u.startsWith("mailto:"));
+  if (mail) $("#mailLink").href = mail.u;
+  $("#tbDocs").innerHTML = docs;
+})();
+
+/* ================= minimap ================= */
+(function mini(){
+  let h = "";
+  for (const m of DATA.mini) h += `<line x1="${m[0]}" y1="${m[1]}" x2="${m[2]}" y2="${m[3]}"/>`;
+  $("#miniLines").innerHTML = h;
+  const el = $("#mini");
+  let down = false;
+  const go = (e, animate) => {
+    const b = $("#miniSvg").getBoundingClientRect();
+    const mx = (e.clientX - b.left) / b.width * W, my = Y0 + (e.clientY - b.top) / b.height * H;
+    const ns = Math.max(s, fitScale() * 3);
+    const t = { s: ns, tx: vw() / 2 - mx * ns, ty: vh() / 2 - (my - Y0) * ns };
+    animate ? fly(t) : (s = t.s, tx = t.tx, ty = t.ty, clamp(), mark(), moving());
+  };
+  el.addEventListener("pointerdown", e => { down = true; el.setPointerCapture(e.pointerId); closePops(); go(e, true); });
+  el.addEventListener("pointermove", e => { if (down && e.buttons) go(e, false); });
+  el.addEventListener("pointerup", () => down = false);
+})();
+function updateViewport(){
+  const [x0, y0] = toMap(0, 0), [x1, y1] = toMap(vw(), vh());
+  const vp = $("#vp");
+  vp.setAttribute("x", Math.max(0, x0)); vp.setAttribute("y", Math.max(Y0, y0));
+  vp.setAttribute("width", Math.max(40, Math.min(W, x1) - Math.max(0, x0)));
+  vp.setAttribute("height", Math.max(40, Math.min(Y0 + H, y1) - Math.max(Y0, y0)));
+}
+
+/* ================= start ================= */
+minS = fitScale() * 0.85;
+layoutSvg();
+fitAll(false);
+commit();
+requestAnimationFrame(loop);
+/* ---------- connecting other apps ----------
+   Open Mantis on an asset:   Mantis_Sunshine.html#MW291   (or ?asset=MW291)
+   From a host page/Power Apps wrapper:  postMessage({ type: "mantis:select", id: "MW291" })
+   Mantis reports every selection back: { type: "mantis:selected", id, kind, title }  */
+function findAsset(id){
+  id = String(id || "").trim().toUpperCase().replace(/\s+/g, "");
+  if (!id) return null;
+  if (ASSETS.has(id)) return primaryLink(ASSETS.get(id));
+  const e = INDEX.find(e => e.k.replace(/\s+/g, "") === id);
+  return e ? (e.asset ? primaryLink(e.asset) : e.link || null) : null;
+}
+function announce(l, title, kind){
+  const id = l.a || title;
+  try { history.replaceState(null, "", "#" + encodeURIComponent(id)); } catch(e){}
+  try { if (window.parent !== window) window.parent.postMessage({ type: "mantis:selected", id, kind, title }, "*"); } catch(e){}
+  if (typeof window.Mantis.onSelect === "function") window.Mantis.onSelect({ id, kind, title });
+}
+window.Mantis = {
+  select(id){ const l = findAsset(id); if (l){ select(l, true); return true; } return false; },
+  assets(){ return [...ASSETS.values()].map(a => ({ id: a.id, kind: assetType(a), x: a.mark[0], y: a.mark[1] })); },
+  onSelect: null
+};
+window.addEventListener("message", e => { const d = e.data || {}; if (d.type === "mantis:select") window.Mantis.select(d.id); });
+(function openFromLink(){
+  let id = "";
+  try { id = new URLSearchParams(location.search).get("asset") || decodeURIComponent(location.hash.slice(1)); } catch(e){}
+  if (id) setTimeout(() => window.Mantis.select(id), 60);
+})();
+// hooks used by automated checks (harmless in normal use)
+window.__mantisTest = {
+  view(x, y, sc){ s = sc; tx = vw() / 2 - x * sc; ty = vh() / 2 - (y - Y0) * sc; clamp(); commit(); mark(); },
+  screen(x, y){ return [x * s + tx, (y - Y0) * s + ty]; },
+  sweep(sc){
+    const old = s; s = sc; const out = { names: [0, 0, []], links: [0, 0, []] };
+    for (const [id, r] of Object.entries(NAMES)){
+      const h = hitTest((r[0] + r[2]) / 2, (r[1] + r[3]) / 2); out.names[0]++;
+      if (h && h.a === id) out.names[1]++; else out.names[2].push([id, h ? (h.a || h.l || h.f) : null]);
+    }
+    for (const l of LINKS){
+      if (isBand(l) || l.t === "Directions" || l.x !== undefined) continue;
+      const h = hitTest(l.cx, l.cy); out.links[0]++;
+      const same = h && (h === l || (l.a && h.a === l.a) || (!l.a && h.u === l.u));
+      if (same) out.links[1]++; else out.links[2].push([l.a || l.l || l.f, h ? (h.a || h.l || h.f) : null]);
+    }
+    s = old; return out;
+  }
+};
+})();
+</script>
+</body>
+</html>
