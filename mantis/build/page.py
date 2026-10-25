@@ -56,7 +56,7 @@ for v, h in LEG:
     m = [p for p in data["palette"] if p["src"] == h and p["role"] == "stroke"]
     legend.append({"v": v, "c": f"var(--p{m[0]['i']})" if m else h})
 data["legend"] = legend
-slim = {k: data.get(k) for k in ("w", "top", "bot", "links", "chrome", "labels", "mini", "legend", "names")}
+slim = {k: data.get(k) for k in ("w", "top", "bot", "links", "chrome", "labels", "mini", "legend", "names", "live")}
 html = html.replace("__DATA__", json.dumps(slim, separators=(",", ":")).replace("</", "<\\/"))
 open(out, "w").write(html)
 print("bytes", len(html.encode()))

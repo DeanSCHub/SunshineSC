@@ -22,6 +22,7 @@
   --chrome-solid:#fafcfd;
   --hover:rgba(29,42,51,.06);
   --lamp:#c27c07;
+  --fault:#d33a2c;--wo:#2563c9;--badge-ink:#ffffff;
   --lamp-ink:#8a5600;
   --lamp-wash:rgba(242,179,61,.18);
   --view:rgba(194,124,7,.9);
@@ -39,6 +40,7 @@ __PAL_LIGHT__
   --chrome-solid:#13232d;
   --hover:rgba(201,214,223,.07);
   --lamp:#f2b33d;
+  --fault:#ff6b5c;--wo:#6ea8ff;--badge-ink:#0e1a22;
   --lamp-ink:#f2b33d;
   --lamp-wash:rgba(242,179,61,.14);
   --view:rgba(242,179,61,.95);
@@ -49,7 +51,7 @@ __PAL_DARK__
   :root:not([data-theme="light"]){
     color-scheme:dark;
     --paper:#0e1a22;--ink:#d9e3ea;--muted:#8fa1ad;--line:rgba(201,214,223,.13);--line-strong:rgba(201,214,223,.24);
-    --chrome:#13232d;--chrome-solid:#13232d;--hover:rgba(201,214,223,.07);--lamp:#f2b33d;--lamp-ink:#f2b33d;
+    --chrome:#13232d;--chrome-solid:#13232d;--hover:rgba(201,214,223,.07);--lamp:#f2b33d;--lamp-ink:#f2b33d;--fault:#ff6b5c;--wo:#6ea8ff;--badge-ink:#0e1a22;
     --lamp-wash:rgba(242,179,61,.14);--view:rgba(242,179,61,.95);--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
 __PAL_DARK__
   }
@@ -74,6 +76,17 @@ button{cursor:pointer}
 .lyr[hidden]{display:none}
 #pins path{fill:var(--lamp);stroke:var(--paper);stroke-width:1.2}
 #pins circle{fill:var(--paper)}
+/* live badges: drawn in map units, then scaled so they stay a readable size at any zoom */
+#badges .bdg{transform:scale(var(--bk,1))}
+#badges .bf{fill:var(--fault);stroke:var(--paper);stroke-width:1.6}
+#badges .br{fill:var(--paper);stroke:var(--fault);stroke-width:1.8}
+#badges .bw{fill:var(--wo);stroke:var(--paper);stroke-width:1.6}
+#badges text{font-family:var(--font);font-weight:700;font-size:8.5px;text-anchor:middle;dominant-baseline:central;fill:var(--badge-ink)}
+#badges .br+text{fill:var(--fault)}
+@media (prefers-reduced-motion:no-preference){
+  #badges .pulse{fill:none;stroke:var(--fault);stroke-width:1.5;transform-box:fill-box;transform-origin:center;animation:bpulse 2s ease-out 3 forwards}
+  @keyframes bpulse{from{opacity:.8;transform:scale(1)}to{opacity:0;transform:scale(2.2)}}
+}
 #hl rect{fill:none;stroke:var(--lamp);stroke-width:3;vector-effect:non-scaling-stroke}
 #hl .ring{fill:none;stroke:var(--lamp);stroke-width:2;vector-effect:non-scaling-stroke;opacity:0}
 @media (prefers-reduced-motion:no-preference){
@@ -127,6 +140,16 @@ button{cursor:pointer}
 .legend span{display:inline-flex;align-items:center;gap:5px;color:var(--ink)}
 .legend i{width:16px;height:6px;border-radius:3px}
 .legend em{font-style:normal}
+.legend .lb{width:14px;height:14px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--badge-ink)}
+.lb.f{background:var(--fault)} .lb.r{background:var(--paper);border:2px solid var(--fault);color:var(--fault);width:12px;height:12px;font-size:9px} .lb.w{background:var(--wo);border-radius:4px}
+#sheet .livehd{display:flex;align-items:baseline;justify-content:space-between;margin:12px 10px 4px}
+#sheet .livehd h3{margin:0}
+#sheet .livehd small{font-size:12px;color:var(--muted)}
+.sample{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;background:var(--lamp-wash);color:var(--lamp-ink);font-size:11px;font-weight:600}
+.doc.live .ic{font-weight:700;font-size:15px}
+.doc.live.f .ic{background:var(--fault);color:var(--badge-ink)}
+.doc.live.r .ic{background:none;border:2px solid var(--fault);color:var(--fault)}
+.doc.live.w .ic{background:var(--wo);color:var(--badge-ink)}
 .toggle .sw{width:22px;height:22px;border-radius:6px;flex:none;border:1px solid var(--line-strong)}
 .toggle .tx{flex:1}
 .toggle .tx b{display:block;font-weight:600;font-size:16px}
@@ -205,6 +228,7 @@ button{cursor:pointer}
       <g id="L-tpws" class="lyr">__L_tpws__</g>
       <g id="L-kp" class="lyr" hidden>__L_kp__</g>
       <g id="pins" class="lyr"></g>
+      <g id="badges" class="lyr"></g>
       <g id="hl"></g>
     </svg>
   </div>
@@ -310,7 +334,7 @@ function clamp(){
    is what crashes tablets). While you drag, fling or pinch, the last drawing is moved/stretched on
    the graphics chip (cheap, smooth). Once things settle - or the view runs off the drawn area -
    it is redrawn sharp at the new position. */
-const OV = 0.6, svgEl = document.getElementById("map");
+const OV = 0.6, svgEl = document.getElementById("map"), badgesEl = document.getElementById("badges");
 let cv = { s: 1, tx: 0, ty: 0 }, box = { ox: 0, oy: 0, w: 1, h: 1 }, lastCommit = 0, flying = false;
 function layoutSvg(){
   box = { ox: -vw() * OV, oy: -vh() * OV, w: vw() * (1 + 2 * OV), h: vh() * (1 + 2 * OV) };
@@ -337,6 +361,7 @@ function commit(){
   const lod = s < 0.32 ? 0 : s < 0.8 ? 1 : 2;
   if (lod !== svgEl.__lod){ svgEl.__lod = lod; svgEl.classList.toggle("lod0", lod === 0); svgEl.classList.toggle("lod1", lod === 1); }
   svgEl.setAttribute("viewBox", `${x} ${y} ${box.w / s} ${box.h / s}`);
+  if (badgesEl) badgesEl.style.setProperty("--bk", Math.min(8, Math.max(0.7, 1.4 / s)).toFixed(3));
   world.style.transform = "translate3d(0,0,0)";
   lastCommit = performance.now();
 }
@@ -553,6 +578,46 @@ const PINS = LINKS.filter(l => l.t === "Directions");
   g.innerHTML = h;
 })();
 
+// live badges: open faults, recently cleared faults and open work orders, matched to assets by ID
+const LIVE = new Map();
+const LIVE_INFO = DATA.live || null;
+if (LIVE_INFO) for (const it of LIVE_INFO.items){
+  if (!ASSETS.has(it.a)) continue;
+  if (!LIVE.has(it.a)) LIVE.set(it.a, []);
+  LIVE.get(it.a).push(it);
+}
+function liveKinds(list){
+  const out = [];
+  const open = list.filter(i => i.k === "fault" && i.open), recent = list.filter(i => i.k === "fault" && !i.open);
+  const wo = list.filter(i => i.k === "wo");
+  if (open.length) out.push({ c: "f", n: open.length, fresh: open.some(i => i.fresh) });
+  else if (recent.length) out.push({ c: "r", n: recent.length });
+  if (wo.length) out.push({ c: "w", n: wo.length });
+  return out;
+}
+const BADGE_R = 6;
+function badgeSpots(a){
+  const r = a.mark;
+  return liveKinds(LIVE.get(a.id)).map((b, k) => ({ ...b, x: r[2] - BADGE_R * 0.5, y: r[1] - BADGE_R - 0.5, k }));
+}
+(function drawBadges(){
+  let h = "";
+  for (const id of LIVE.keys()){
+    const a = ASSETS.get(id);
+    for (const b of badgeSpots(a)){
+      // later badges sit to the right of earlier ones; the offset is in badge units so it scales with them
+      const x = b.x, y = b.y, dx = b.k * (BADGE_R * 2 + 2);
+      const label = b.c === "w" ? String(b.n) : "!";
+      const shape = b.c === "w"
+        ? `<rect class="bw" x="${dx - BADGE_R}" y="${-BADGE_R}" width="${BADGE_R * 2}" height="${BADGE_R * 2}" rx="3"/>`
+        : `<circle class="b${b.c}" cx="${dx}" cy="0" r="${BADGE_R}"/>`;
+      const pulse = b.fresh ? `<circle class="pulse" cx="${dx}" cy="0" r="${BADGE_R}"/>` : "";
+      h += `<g class="bdg" style="transform-origin:${x - BADGE_R}px ${y + BADGE_R}px"><g transform="translate(${x} ${y})">${pulse}${shape}<text x="${dx}" y=".3">${label}</text></g></g>`;
+    }
+  }
+  badgesEl.innerHTML = h;
+})();
+
 function dist2rect(x, y, r){
   const dx = Math.max(r[0] - x, 0, x - r[2]), dy = Math.max(r[1] - y, 0, y - r[3]);
   return Math.hypot(dx, dy);
@@ -581,6 +646,14 @@ function hitTest(mx, my){
   };
   for (const t of TARGETS) consider(t.r, t.l, t.name);
   if (pinsOn) for (const p of PINS) consider([p.cx - 7, p.cy - 12, p.cx + 7, p.cy + 6], p, 1);
+  if (LIVE.size && !badgesEl.hasAttribute("hidden")){
+    const bk = Math.min(8, Math.max(0.7, 1.4 / s));
+    for (const id of LIVE.keys()){
+      const a = ASSETS.get(id), sp = badgeSpots(a), x0 = sp[0].x - BADGE_R, y = sp[0].y;
+      const x1 = x0 + sp.length * (BADGE_R * 2 + 2) * bk;
+      consider([x0, y + BADGE_R - 2 * BADGE_R * bk, x1, y + BADGE_R], primaryLink(a), 1);
+    }
+  }
   return best;
 }
 function onTap(px, py){
@@ -659,6 +732,26 @@ function areaDrawings(x, y){
   const rows = BAND_TYPES.filter(t => best[t] && best[t].score < 900).map(t => best[t].l);
   return rows.length ? `<h3>Drawings for this area</h3>` + rows.map(l => docRow(l)).join("") : "";
 }
+function ago(t){
+  const m = Math.round((Date.parse(LIVE_INFO.updated) - Date.parse(t)) / 60000);
+  if (m < 60) return `${m} min ago`;
+  if (m < 48 * 60) return `${Math.round(m / 60)} h ago`;
+  return `${Math.round(m / 1440)} days ago`;
+}
+function liveRows(list){
+  const order = i => i.k === "fault" ? (i.open ? 0 : 2) : 1;
+  const rows = list.slice().sort((x, y) => order(x) - order(y)).map(i => {
+    const c = i.k === "wo" ? "w" : i.open ? "f" : "r";
+    const what = i.k === "wo"
+      ? `Work order ${esc(i.ref)} · ${esc(i.status)} · due ${esc(i.due)}`
+      : `Fault ${esc(i.ref)} · ${i.open ? "open" : "cleared"} · ${i.open ? "reported" : "cleared"} ${ago(i.when)}`;
+    return `<a class="doc live ${c}" href="${esc(i.url || "#")}" target="_blank" rel="noopener"><span class="ic" aria-hidden="true">${c === "w" ? "W" : "!"}</span>
+      <span class="dt"><b>${esc(i.title)}</b><small>${what}</small></span></a>`;
+  }).join("");
+  const t = new Date(LIVE_INFO.updated);
+  const hm = `${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}`;
+  return `<div class="livehd"><h3>Live work${LIVE_INFO.sample ? '<span class="sample">Sample data</span>' : ""}</h3><small>Updated ${hm}</small></div>` + rows;
+}
 function missingRow(l){
   return `<div class="doc missing"><span class="ic" aria-hidden="true">${ICON.doc}</span><span class="dt"><b>Drawing not linked</b><small>The Mantis link here has no file name. Add it in the asset list.</small></span></div>`;
 }
@@ -682,6 +775,7 @@ function select(l, fromSearch){
     const own = uniqueDocs(a.links);
     own.sort((x, y) => TYPE_ORDER.indexOf(x.t) - TYPE_ORDER.indexOf(y.t));
     const seen = new Set(own.map(fileKey));
+    if (LIVE.has(a.id)) body += liveRows(LIVE.get(a.id));
     body += `<h3>Drawings</h3>` + own.map((x, k) => docRow(x, "doc", k === 0)).join("");
     if (a.links.some(x => x.m)) body += missingRow();
     // documents filed in this location's folder
@@ -803,10 +897,11 @@ const LAYERS = [
   { id: "supply", name: "Asset supply", note: "Which location feeds each asset", sw: "var(--supply-sw)", on: true },
   { id: "pins", name: "Directions pins", note: "Tap a pin for driving directions", sw: "var(--lamp)", on: true },
 ];
+if (LIVE.size) LAYERS.unshift({ id: "live", name: "Live work", note: `Open faults, recent faults and work orders${LIVE_INFO.sample ? " (sample data)" : ""}`, sw: "var(--fault)", on: true });
 const layerState = store.get("layers", {});
 function setLayer(L, on){
   L.on = on;
-  const g = L.id === "pins" ? $("#pins") : $("#L-" + L.id);
+  const g = L.id === "pins" ? $("#pins") : L.id === "live" ? badgesEl : $("#L-" + L.id);
   on ? g.removeAttribute("hidden") : g.setAttribute("hidden", "");
   const b = document.querySelector(`.toggle[data-id="${L.id}"]`);
   if (b) b.setAttribute("aria-checked", on ? "true" : "false");
@@ -814,7 +909,8 @@ function setLayer(L, on){
 }
 $("#layerList").innerHTML = LAYERS.map(L => `<button class="toggle" role="switch" data-id="${L.id}" aria-checked="false">
   <span class="sw" style="background:${L.sw}"></span><span class="tx"><b>${L.name}</b><small>${L.note}</small></span><span class="knob" aria-hidden="true"></span></button>` +
-  (L.id === "speed" ? `<div class="legend" aria-label="Speed colours">${DATA.legend.map(g => `<span><i style="background:${g.c}"></i>${g.v}</span>`).join("")}<em>km/h</em></div>` : "")).join("");
+  (L.id === "speed" ? `<div class="legend" aria-label="Speed colours">${DATA.legend.map(g => `<span><i style="background:${g.c}"></i>${g.v}</span>`).join("")}<em>km/h</em></div>` : "") +
+  (L.id === "live" ? `<div class="legend" aria-label="Live work key"><span><i class="lb f">!</i>Open fault</span><span><i class="lb r">!</i>Fault in last 7 days</span><span><i class="lb w">2</i>Open work orders</span></div>` : "")).join("");
 LAYERS.forEach(L => setLayer(L, layerState[L.id] !== undefined ? layerState[L.id] : L.on));
 $("#layerList").addEventListener("click", e => {
   const b = e.target.closest(".toggle"); if (!b) return;
