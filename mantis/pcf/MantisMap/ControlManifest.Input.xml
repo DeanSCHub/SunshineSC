@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="Mantis" constructor="MantisMap" version="1.0.1" display-name-key="Mantis map" description-key="Interactive Mantis signalling map. Tap an asset for its drawings." control-type="standard">
+  <control namespace="Mantis" constructor="MantisMap" version="1.0.2" display-name-key="SunshineMap" description-key="Interactive Mantis signalling map. Tap an asset for its drawings." control-type="standard">
     <external-service-usage enabled="false"></external-service-usage>
     <property name="Asset" display-name-key="Asset" description-key="Asset ID to show, e.g. WVS933. The map flies to it and opens its panel." of-type="SingleLine.Text" usage="input" required="false" />
     <property name="LinkHandling" display-name-key="Link handling" description-key="Browser: drawings open in a new tab. App: drawings are passed out through LinkToOpen so the app can Launch() them." of-type="Enum" usage="input" default-value="Browser" required="true">
