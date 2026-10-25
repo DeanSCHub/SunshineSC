@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Build the Mantis map code component and pack it into an importable solution.
-#   ./build.sh 1.0.1            -> ../out/MantisMap_1_0_1.zip
+#   ./build.sh 1.0.1            -> ../releases/MantisSunshine_1_0_1.zip  (kept in git)
 # Every release needs a higher version than the last import, or Power Apps won't offer the update.
 # Needs: npm install (once), and pac + DOTNET_ROOT from scripts/get-pac.sh.
 set -euo pipefail
@@ -19,7 +19,7 @@ npm run build --silent
 C=solution/src/Controls/mantis_Mantis.MantisMap
 cp out/controls/MantisMap/ControlManifest.xml out/controls/MantisMap/bundle.js "$C/"
 sed -i -E "s#<Version>[0-9.]+</Version>#<Version>$VER.0</Version>#" solution/src/Other/Solution.xml
-ZIP="../out/MantisMap_${VER//./_}.zip"
-mkdir -p ../out
+ZIP="../releases/MantisSunshine_${VER//./_}.zip"
+mkdir -p ../releases
 "$PAC" solution pack --zipfile "$ZIP" --folder solution/src --packagetype Unmanaged
 echo "built $ZIP"
